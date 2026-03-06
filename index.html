@@ -14,15 +14,18 @@
 
     /* ── Header / Altar Banner ── */
     .altar-banner {
-      text-align: center;
-      padding: 24px 16px 16px;
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
       background: linear-gradient(180deg, #0d1117 0%, #0a0a0f 100%);
       border-bottom: 1px solid #1a1a2e;
+    }
+    .altar-text {
+      flex: 1;
     }
     .altar-title {
       color: #00d4ff;
       font-size: 1.4rem;
-      margin-top: 8px;
       text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
       letter-spacing: 4px;
     }
@@ -35,9 +38,21 @@
     .altar-verse {
       color: #555;
       font-size: 0.7rem;
-      margin-top: 6px;
+      margin-top: 4px;
       font-style: italic;
     }
+    .altar-links {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-end;
+    }
+    .altar-links a {
+      color: #569cd6;
+      text-decoration: none;
+      font-size: 0.75rem;
+    }
+    .altar-links a:hover { text-decoration: underline; }
 
     /* ── Layout ── */
     .main-grid {
@@ -161,14 +176,6 @@
       color: #333;
       font-style: italic;
     }
-    .status-bar a {
-      color: #569cd6;
-      text-decoration: none;
-      margin-left: 12px;
-      font-size: 0.75rem;
-    }
-    .status-bar a:hover { text-decoration: underline; }
-    .links { display: flex; align-items: center; gap: 4px; }
 
   </style>
 </head>
@@ -176,9 +183,16 @@
 
   <!-- ═══ HEADER ═══ -->
   <div class="altar-banner">
-    <div class="altar-title">THE ALTAR OF DART</div>
-    <div class="altar-subtitle">PYTHON IN THE BROWSER &mdash; NO SERVER, NO BINARY, JUST DART</div>
-    <div class="altar-verse">"And 'Bob' spake from within the WASM, and Dart carried the word unto the DOM." &mdash; Book of Monty 3:14</div>
+    <div class="altar-text">
+      <div class="altar-title">THE ALTAR OF DART</div>
+      <div class="altar-subtitle">PYTHON IN THE BROWSER &mdash; NO SERVER, NO BINARY, JUST DART</div>
+      <div class="altar-verse">"And 'Bob' spake from within the WASM, and Dart carried the word unto the DOM." &mdash; Book of Monty 3:14</div>
+    </div>
+    <div class="altar-links">
+      <a href="https://github.com/pydantic/monty">pydantic/monty</a>
+      <a href="https://pub.dev/packages/dart_monty">pub.dev/dart_monty</a>
+      <a href="https://github.com/runyaga/dart_monty">runyaga/dart_monty</a>
+    </div>
   </div>
 
   <!-- ═══ MAIN CONTENT ═══ -->
@@ -208,12 +222,7 @@
   <!-- ═══ STATUS BAR ═══ -->
   <div class="status-bar">
     <span id="status">Loading the sacred interpreter...</span>
-    <span class="links">
-      <span class="creed">Dart is the way. Slack off.</span>
-      <a href="https://github.com/pydantic/monty">pydantic/monty</a>
-      <a href="https://pub.dev/packages/dart_monty">pub.dev/dart_monty</a>
-      <a href="https://github.com/runyaga/dart_monty">GitHub</a>
-    </span>
+    <span class="creed">Dart is the way. Slack off.</span>
   </div>
 
   <!-- ═══ SCRIPTS ═══ -->
