@@ -427,12 +427,12 @@
         return a0 != null && receiver === a0;
       return J.getInterceptor$(receiver).$eq(receiver, a0);
     },
-    $index$ax(receiver, a0) {
+    $index$asx(receiver, a0) {
       if (typeof a0 === "number")
-        if (Array.isArray(receiver) || A.isJsIndexable(receiver, receiver[init.dispatchPropertyName]))
+        if (Array.isArray(receiver) || typeof receiver == "string" || A.isJsIndexable(receiver, receiver[init.dispatchPropertyName]))
           if (a0 >>> 0 === a0 && a0 < receiver.length)
             return receiver[a0];
-      return J.getInterceptor$ax(receiver).$index(receiver, a0);
+      return J.getInterceptor$asx(receiver).$index(receiver, a0);
     },
     toString$0$(receiver) {
       return J.getInterceptor$(receiver).toString$0(receiver);
@@ -694,6 +694,14 @@
       if (index < 0 || index >= $length)
         return A.IndexError$withLength(index, $length, indexable, _s5_);
       return new A.RangeError(null, null, true, index, _s5_, "Value not in range");
+    },
+    diagnoseRangeError(start, end, $length) {
+      if (start > $length)
+        return A.RangeError$range(start, 0, $length, "start", null);
+      if (end != null)
+        if (end < start || end > $length)
+          return A.RangeError$range(end, start, $length, "end", null);
+      return new A.ArgumentError(true, end, "end", null);
     },
     wrapException(ex) {
       return A.initializeExceptionWrapper(ex, new Error());
@@ -1319,6 +1327,26 @@
         return $function.apply(null, fieldRtis);
       return $function(fieldRtis);
     },
+    JSSyntaxRegExp_makeNative(source, multiLine, caseSensitive, unicode, dotAll, extraFlags) {
+      var m = multiLine ? "m" : "",
+        i = caseSensitive ? "" : "i",
+        u = unicode ? "u" : "",
+        s = dotAll ? "s" : "",
+        regexp = function(source, modifiers) {
+          try {
+            return new RegExp(source, modifiers);
+          } catch (e) {
+            return e;
+          }
+        }(source, m + i + u + s + extraFlags);
+      if (regexp instanceof RegExp)
+        return regexp;
+      throw A.wrapException(A.FormatException$("Illegal RegExp pattern (" + String(regexp) + ")", source));
+    },
+    stringContainsUnchecked(receiver, other, startIndex) {
+      var t1 = receiver.indexOf(other, startIndex);
+      return t1 >= 0;
+    },
     quoteStringForRegExp(string) {
       if (/[[\]{}()*+?.\\^$|]/.test(string))
         return string.replace(/[[\]{}()*+?.\\^$|]/g, "\\$&");
@@ -1428,6 +1456,22 @@
     },
     initHooks_closure1: function initHooks_closure1(t0) {
       this.prototypeForTag = t0;
+    },
+    JSSyntaxRegExp: function JSSyntaxRegExp(t0, t1) {
+      var _ = this;
+      _.pattern = t0;
+      _._nativeRegExp = t1;
+      _._hasCapturesCache = _._nativeAnchoredRegExp = _._nativeGlobalRegExp = null;
+    },
+    _checkValidRange(start, end, $length) {
+      var t1;
+      if (!(start >>> 0 !== start))
+        t1 = end >>> 0 !== end || start > end || end > $length;
+      else
+        t1 = true;
+      if (t1)
+        throw A.wrapException(A.diagnoseRangeError(start, end, $length));
+      return end;
     },
     NativeByteBuffer: function NativeByteBuffer() {
     },
@@ -3452,8 +3496,8 @@
         parsed = JSON.parse(source);
       } catch (exception) {
         e = A.unwrapException(exception);
-        t1 = String(e);
-        throw A.wrapException(new A.FormatException(t1));
+        t1 = A.FormatException$(String(e), null);
+        throw A.wrapException(t1);
       }
       t1 = A._convertJsonToDartLazy(parsed);
       return t1;
@@ -3499,6 +3543,8 @@
     },
     Converter: function Converter() {
     },
+    Encoding: function Encoding() {
+    },
     JsonUnsupportedObjectError: function JsonUnsupportedObjectError(t0, t1) {
       this.unsupportedObject = t0;
       this.cause = t1;
@@ -3526,6 +3572,14 @@
       this._seen = t1;
       this._toEncodable = t2;
     },
+    Utf8Codec: function Utf8Codec() {
+    },
+    Utf8Encoder: function Utf8Encoder() {
+    },
+    _Utf8Encoder: function _Utf8Encoder(t0) {
+      this._bufferIndex = 0;
+      this._buffer = t0;
+    },
     Error__throw(error, stackTrace) {
       error = A.initializeExceptionWrapper(error, new Error());
       if (error == null)
@@ -3542,6 +3596,9 @@
       result = t1;
       return result;
     },
+    RegExp_RegExp(source) {
+      return new A.JSSyntaxRegExp(source, A.JSSyntaxRegExp_makeNative(source, false, true, false, false, ""));
+    },
     StringBuffer__writeAll(string, objects, separator) {
       var iterator = J.get$iterator$ax(objects);
       if (!iterator.moveNext$0())
@@ -3556,6 +3613,26 @@
           string = string + separator + A.S(iterator.get$current());
       }
       return string;
+    },
+    _Uri__uriEncode(canonicalMask, text, encoding, spaceToPlus) {
+      var t1, bytes, i, t2, byte,
+        _s16_ = "0123456789ABCDEF";
+      if (encoding === B.C_Utf8Codec) {
+        t1 = $.$get$_Uri__needsNoEncoding();
+        t1 = t1._nativeRegExp.test(text);
+      } else
+        t1 = false;
+      if (t1)
+        return text;
+      bytes = B.C_Utf8Encoder.convert$1(text);
+      for (t1 = bytes.length, i = 0, t2 = ""; i < t1; ++i) {
+        byte = bytes[i];
+        if (byte < 128 && ("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\u03f6\x00\u0404\u03f4 \u03f4\u03f6\u01f6\u01f6\u03f6\u03fc\u01f4\u03ff\u03ff\u0584\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u05d4\u01f4\x00\u01f4\x00\u0504\u05c4\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u0400\x00\u0400\u0200\u03f7\u0200\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u03ff\u0200\u0200\u0200\u03f7\x00".charCodeAt(byte) & canonicalMask) !== 0)
+          t2 += A.Primitives_stringFromCharCode(byte);
+        else
+          t2 = t2 + "%" + _s16_[byte >>> 4 & 15] + _s16_[byte & 15];
+      }
+      return t2.charCodeAt(0) == 0 ? t2 : t2;
     },
     StackTrace_current() {
       return A.getTraceFromException(new Error());
@@ -3624,6 +3701,9 @@
       }
       return $length;
     },
+    RangeError_checkNotNegative(value, $name) {
+      return value;
+    },
     IndexError$withLength(invalidValue, $length, indexable, $name) {
       return new A.IndexError($length, true, invalidValue, $name, "Index out of range");
     },
@@ -3638,6 +3718,9 @@
     },
     ConcurrentModificationError$(modifiedObject) {
       return new A.ConcurrentModificationError(modifiedObject);
+    },
+    FormatException$(message, source) {
+      return new A.FormatException(message, source);
     },
     Iterable_iterableToShortString(iterable, leftDelimiter, rightDelimiter) {
       var parts, t1;
@@ -3816,8 +3899,9 @@
     _Exception: function _Exception(t0) {
       this.message = t0;
     },
-    FormatException: function FormatException(t0) {
+    FormatException: function FormatException(t0, t1) {
       this.message = t0;
+      this.source = t1;
     },
     Iterable: function Iterable() {
     },
@@ -3913,7 +3997,7 @@
     _dispatch(fnName, args) {
       var $async$goto = 0,
         $async$completer = A._makeAsyncAwaitCompleter(type$.nullable_Object),
-        $async$returnValue, tag, t1, h, text, parentH, childH, $parent, child, selector, el, prop, val, attr, html, svEl, t2, gvEl, key, msg, $async$temp1, $async$temp2, $async$temp3;
+        $async$returnValue, tag, t1, h, text, parentH, childH, $parent, child, selector, el, prop, val, attr, html, svEl, t2, gvEl, key, msg, result, data, filename, $content, anchor, input, $async$temp1, $async$temp2, $async$temp3;
       var $async$_dispatch = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
         if ($async$errorCode === 1)
           return A._asyncRethrow($async$result, $async$completer);
@@ -4000,9 +4084,25 @@
                   // goto case
                   $async$goto = 23;
                   break;
+                case "interpreter_snapshot":
+                  // goto case
+                  $async$goto = 24;
+                  break;
+                case "interpreter_restore":
+                  // goto case
+                  $async$goto = 25;
+                  break;
+                case "download_file":
+                  // goto case
+                  $async$goto = 26;
+                  break;
+                case "upload_file":
+                  // goto case
+                  $async$goto = 27;
+                  break;
                 default:
                   // goto default
-                  $async$goto = 24;
+                  $async$goto = 28;
                   break;
               }
               break;
@@ -4315,9 +4415,9 @@
               }
               t1 = new A._Future($.Zone__current, type$._Future_String);
               el.addEventListener("click", A._functionToJS1(new A._dispatch_closure(new A._AsyncCompleter(t1, type$._AsyncCompleter_String))));
-              $async$goto = 25;
+              $async$goto = 29;
               return A._asyncAwait(t1, $async$_dispatch);
-            case 25:
+            case 29:
               // returning from await.
               $async$returnValue = $async$result;
               // goto return
@@ -4333,13 +4433,13 @@
               }
               $async$temp1 = A;
               $async$temp2 = A;
-              $async$goto = 27;
+              $async$goto = 31;
               return A._asyncAwait(A.promiseToFuture(A._asJSObject(init.G.fetch(A._asString(args[0]))), type$.JSObject), $async$_dispatch);
-            case 27:
+            case 31:
               // returning from await.
-              $async$goto = 26;
+              $async$goto = 30;
               return A._asyncAwait($async$temp1.promiseToFuture($async$temp2._asJSObject($async$result.text()), type$.String), $async$_dispatch);
-            case 26:
+            case 30:
               // returning from await.
               $async$returnValue = $async$result;
               // goto return
@@ -4356,13 +4456,13 @@
               $async$temp1 = B.C_JsonCodec;
               $async$temp2 = A;
               $async$temp3 = A;
-              $async$goto = 29;
+              $async$goto = 33;
               return A._asyncAwait(A.promiseToFuture(A._asJSObject(init.G.fetch(A._asString(args[0]))), type$.JSObject), $async$_dispatch);
-            case 29:
+            case 33:
               // returning from await.
-              $async$goto = 28;
+              $async$goto = 32;
               return A._asyncAwait($async$temp2.promiseToFuture($async$temp3._asJSObject($async$result.text()), type$.String), $async$_dispatch);
-            case 28:
+            case 32:
               // returning from await.
               $async$returnValue = $async$temp1.decode$2$reviver($async$result, null);
               // goto return
@@ -4444,6 +4544,91 @@
               $async$goto = 1;
               break;
             case 24:
+              // case
+              $async$temp1 = type$.Map_String_dynamic;
+              $async$temp2 = B.C_JsonCodec;
+              $async$goto = 34;
+              return A._asyncAwait(A.promiseToFuture(A._asJSObject(init.G.DartMontyBridge.snapshot()), type$.String), $async$_dispatch);
+            case 34:
+              // returning from await.
+              result = $async$temp1._as($async$temp2.decode$2$reviver($async$result, null));
+              if (J.$eq$(result.$index(0, "ok"), true)) {
+                $async$returnValue = A._asString(result.$index(0, "data"));
+                // goto return
+                $async$goto = 1;
+                break;
+              }
+              $async$returnValue = "Error: " + A.S(result.$index(0, "error"));
+              // goto return
+              $async$goto = 1;
+              break;
+            case 25:
+              // case
+              if (0 >= args.length) {
+                $async$returnValue = A.ioore(args, 0);
+                // goto return
+                $async$goto = 1;
+                break;
+              }
+              data = A._asString(args[0]);
+              $async$temp1 = type$.Map_String_dynamic;
+              $async$temp2 = B.C_JsonCodec;
+              $async$goto = 35;
+              return A._asyncAwait(A.promiseToFuture(A._asJSObject(init.G.DartMontyBridge.restore(data)), type$.String), $async$_dispatch);
+            case 35:
+              // returning from await.
+              result = $async$temp1._as($async$temp2.decode$2$reviver($async$result, null));
+              if (J.$eq$(result.$index(0, "ok"), true)) {
+                $async$returnValue = "restored";
+                // goto return
+                $async$goto = 1;
+                break;
+              }
+              $async$returnValue = "Error: " + A.S(result.$index(0, "error"));
+              // goto return
+              $async$goto = 1;
+              break;
+            case 26:
+              // case
+              t1 = args.length;
+              if (0 >= t1) {
+                $async$returnValue = A.ioore(args, 0);
+                // goto return
+                $async$goto = 1;
+                break;
+              }
+              filename = A._asString(args[0]);
+              if (1 >= t1) {
+                $async$returnValue = A.ioore(args, 1);
+                // goto return
+                $async$goto = 1;
+                break;
+              }
+              $content = A._asString(args[1]);
+              anchor = A._asJSObject(A._asJSObject(init.G.document).createElement("a"));
+              anchor.href = "data:application/octet-stream;base64," + A._Uri__uriEncode(2, $content, B.C_Utf8Codec, false);
+              anchor.download = filename;
+              anchor.click();
+              $async$returnValue = null;
+              // goto return
+              $async$goto = 1;
+              break;
+            case 27:
+              // case
+              input = A._asJSObject(A._asJSObject(init.G.document).createElement("input"));
+              input.type = "file";
+              t1 = new A._Future($.Zone__current, type$._Future_nullable_String);
+              input.addEventListener("change", A._functionToJS1(new A._dispatch_closure0(input, new A._AsyncCompleter(t1, type$._AsyncCompleter_nullable_String))));
+              input.click();
+              $async$goto = 36;
+              return A._asyncAwait(t1, $async$_dispatch);
+            case 36:
+              // returning from await.
+              $async$returnValue = $async$result;
+              // goto return
+              $async$goto = 1;
+              break;
+            case 28:
               // default
               $async$returnValue = "Unknown host function: " + fnName;
               // goto return
@@ -4471,7 +4656,7 @@
           switch ($async$goto) {
             case 0:
               // Function start
-              extFnsJson = B.C_JsonCodec.encode$2$toEncodable(B.List_0XO, null);
+              extFnsJson = B.C_JsonCodec.encode$2$toEncodable(B.List_6LB, null);
               t1 = init.G;
               t2 = type$.String;
               t3 = type$.Map_String_dynamic;
@@ -4485,13 +4670,13 @@
               t4 = type$.Exception, t5 = type$.nullable_List_dynamic;
             case 4:
               // for condition
-              if (!J.$eq$(J.$index$ax(result, "state"), "pending")) {
+              if (!J.$eq$(J.$index$asx(result, "state"), "pending")) {
                 // goto after for
                 $async$goto = 5;
                 break;
               }
-              fnName = A._asString(J.$index$ax(result, "functionName"));
-              fnArgs0 = t5._as(J.$index$ax(result, "args"));
+              fnName = A._asString(J.$index$asx(result, "functionName"));
+              fnArgs0 = t5._as(J.$index$asx(result, "args"));
               fnArgs = fnArgs0 == null ? [] : fnArgs0;
               $async$handler = 7;
               $async$goto = 10;
@@ -4571,8 +4756,8 @@
       t2.toString;
       t2.innerHTML = '<option value="">-- Select a Demo --</option>';
       t3 = type$.String;
-      labels = A.LinkedHashMap_LinkedHashMap$_literal(["hello", "Hello from Python", "altar", "The Sacred Altar (ASCII)", "todo", "The Dart Commandments", "counter", "Persistent Pilgrimage Counter", "dashboard", "Dart Evangelism Dashboard", "form", "Stateful Form (localStorage)"], t3, t3);
-      for (t3 = B.Map_5e67x.get$entries(), t4 = t3.$ti, t3 = new A._SyncStarIterator(t3._outerHelper(), t4._eval$1("_SyncStarIterator<1>")), t4 = t4._precomputed1; t3.moveNext$0();) {
+      labels = A.LinkedHashMap_LinkedHashMap$_literal(["hello", "Hello from Python", "altar", "The Sacred Altar (ASCII)", "todo", "The Dart Commandments", "counter", "Persistent Pilgrimage Counter", "dashboard", "Dart Evangelism Dashboard", "form", "Stateful Form (localStorage)", "snapshot", "Snapshot + Download State", "restore", "Upload + Restore State"], t3, t3);
+      for (t3 = B.Map_DdOAp.get$entries(), t4 = t3.$ti, t3 = new A._SyncStarIterator(t3._outerHelper(), t4._eval$1("_SyncStarIterator<1>")), t4 = t4._precomputed1; t3.moveNext$0();) {
         t5 = t3._async$_current;
         if (t5 == null)
           t5 = t4._as(t5);
@@ -4628,15 +4813,15 @@
               t1 = sw;
               if (t1._stop == null)
                 t1._stop = $.Primitives_timerTicks.call$0();
-              usage = type$.nullable_Map_String_dynamic._as(J.$index$ax(result, "usage"));
+              usage = type$.nullable_Map_String_dynamic._as(J.$index$asx(result, "usage"));
               t1 = usage;
-              mem0 = A._asIntQ(t1 == null ? null : J.$index$ax(t1, "memory_bytes_used"));
+              mem0 = A._asIntQ(t1 == null ? null : J.$index$asx(t1, "memory_bytes_used"));
               mem = mem0 == null ? 0 : mem0;
               t1 = usage;
-              time0 = A._asIntQ(t1 == null ? null : J.$index$ax(t1, "time_elapsed_ms"));
+              time0 = A._asIntQ(t1 == null ? null : J.$index$asx(t1, "time_elapsed_ms"));
               time = time0 == null ? sw.get$elapsedMilliseconds() : time0;
               t1 = usage;
-              stack0 = A._asIntQ(t1 == null ? null : J.$index$ax(t1, "stack_depth_used"));
+              stack0 = A._asIntQ(t1 == null ? null : J.$index$asx(t1, "stack_depth_used"));
               stack = stack0 == null ? 0 : stack0;
               t1 = A.S(time);
               t2 = mem;
@@ -4648,12 +4833,12 @@
               }
               statusEl.textContent = "Done in " + t1 + "ms | Memory: " + B.JSNumber_methods.toStringAsFixed$1(t2 / 1024, 1) + "KB | Stack: " + A.S(stack);
               A._asJSObject(statusEl.style).color = "#569cd6";
-              if (J.$index$ax(result, "error") != null) {
-                A._log("Error: " + A.S(J.$index$ax(result, "error")));
+              if (J.$index$asx(result, "error") != null) {
+                A._log("Error: " + A.S(J.$index$asx(result, "error")));
                 A._asJSObject(statusEl.style).color = "#f44747";
               }
-              if (J.$index$ax(result, "value") != null && !J.$eq$(J.$index$ax(result, "value"), "None"))
-                A._log("=> " + A.S(J.$index$ax(result, "value")));
+              if (J.$index$asx(result, "value") != null && !J.$eq$(J.$index$asx(result, "value"), "None"))
+                A._log("=> " + A.S(J.$index$asx(result, "value")));
               $async$handler = 2;
               // goto after finally
               $async$goto = 6;
@@ -4746,6 +4931,14 @@
     },
     _dispatch_closure: function _dispatch_closure(t0) {
       this.completer = t0;
+    },
+    _dispatch_closure0: function _dispatch_closure0(t0, t1) {
+      this.input = t0;
+      this.completer = t1;
+    },
+    _dispatch__closure: function _dispatch__closure(t0, t1) {
+      this.reader = t0;
+      this.completer = t1;
     },
     _populateDemoSelector_closure: function _populateDemoSelector_closure(t0) {
       this.select = t0;
@@ -5025,6 +5218,9 @@
     substring$2(receiver, start, end) {
       return receiver.substring(start, A.RangeError_checkValidRange(start, end, receiver.length));
     },
+    substring$1(receiver, start) {
+      return this.substring$2(receiver, start, null);
+    },
     trim$0(receiver) {
       var startIndex, t1, endIndex0,
         result = receiver.trim(),
@@ -5047,6 +5243,13 @@
         return result;
       return result.substring(startIndex, endIndex0);
     },
+    indexOf$1(receiver, pattern) {
+      var t1 = receiver.indexOf(pattern, 0);
+      return t1;
+    },
+    contains$1(receiver, other) {
+      return A.stringContainsUnchecked(receiver, other, 0);
+    },
     toString$0(receiver) {
       return receiver;
     },
@@ -5068,6 +5271,7 @@
       return receiver.length;
     },
     $isTrustedGetRuntimeType: 1,
+    $isPattern: 1,
     $isString: 1
   };
   A.LateError.prototype = {
@@ -5590,6 +5794,12 @@
     },
     $signature: 10
   };
+  A.JSSyntaxRegExp.prototype = {
+    toString$0(_) {
+      return "RegExp/" + this.pattern + "/" + this._nativeRegExp.flags;
+    },
+    $isPattern: 1
+  };
   A.NativeByteBuffer.prototype = {
     get$runtimeType(receiver) {
       return B.Type_ByteBuffer_rqD;
@@ -5669,7 +5879,8 @@
     get$length(receiver) {
       return receiver.length;
     },
-    $isTrustedGetRuntimeType: 1
+    $isTrustedGetRuntimeType: 1,
+    $isUint8List: 1
   };
   A._NativeTypedArrayOfDouble_NativeTypedArray_ListMixin.prototype = {};
   A._NativeTypedArrayOfDouble_NativeTypedArray_ListMixin_FixedLengthListMixin.prototype = {};
@@ -6432,6 +6643,7 @@
   };
   A.Codec.prototype = {};
   A.Converter.prototype = {};
+  A.Encoding.prototype = {};
   A.JsonUnsupportedObjectError.prototype = {
     toString$0(_) {
       var safeString = A.Error_safeToString(this.unsupportedObject);
@@ -6693,6 +6905,147 @@
       return t1.charCodeAt(0) == 0 ? t1 : t1;
     }
   };
+  A.Utf8Codec.prototype = {};
+  A.Utf8Encoder.prototype = {
+    convert$1(string) {
+      var t1, t2, encoder, t3,
+        stringLength = string.length,
+        end = A.RangeError_checkValidRange(0, null, stringLength);
+      if (end === 0)
+        return new Uint8Array(0);
+      t1 = end * 3;
+      t2 = new Uint8Array(t1);
+      encoder = new A._Utf8Encoder(t2);
+      if (encoder._fillBuffer$3(string, 0, end) !== end) {
+        t3 = end - 1;
+        if (!(t3 >= 0 && t3 < stringLength))
+          return A.ioore(string, t3);
+        encoder._writeReplacementCharacter$0();
+      }
+      return new Uint8Array(t2.subarray(0, A._checkValidRange(0, encoder._bufferIndex, t1)));
+    }
+  };
+  A._Utf8Encoder.prototype = {
+    _writeReplacementCharacter$0() {
+      var t4, _this = this,
+        t1 = _this._buffer,
+        t2 = _this._bufferIndex,
+        t3 = _this._bufferIndex = t2 + 1;
+      t1.$flags & 2 && A.throwUnsupportedOperation(t1);
+      t4 = t1.length;
+      if (!(t2 < t4))
+        return A.ioore(t1, t2);
+      t1[t2] = 239;
+      t2 = _this._bufferIndex = t3 + 1;
+      if (!(t3 < t4))
+        return A.ioore(t1, t3);
+      t1[t3] = 191;
+      _this._bufferIndex = t2 + 1;
+      if (!(t2 < t4))
+        return A.ioore(t1, t2);
+      t1[t2] = 189;
+    },
+    _writeSurrogate$2(leadingSurrogate, nextCodeUnit) {
+      var rune, t1, t2, t3, t4, _this = this;
+      if ((nextCodeUnit & 64512) === 56320) {
+        rune = 65536 + ((leadingSurrogate & 1023) << 10) | nextCodeUnit & 1023;
+        t1 = _this._buffer;
+        t2 = _this._bufferIndex;
+        t3 = _this._bufferIndex = t2 + 1;
+        t1.$flags & 2 && A.throwUnsupportedOperation(t1);
+        t4 = t1.length;
+        if (!(t2 < t4))
+          return A.ioore(t1, t2);
+        t1[t2] = rune >>> 18 | 240;
+        t2 = _this._bufferIndex = t3 + 1;
+        if (!(t3 < t4))
+          return A.ioore(t1, t3);
+        t1[t3] = rune >>> 12 & 63 | 128;
+        t3 = _this._bufferIndex = t2 + 1;
+        if (!(t2 < t4))
+          return A.ioore(t1, t2);
+        t1[t2] = rune >>> 6 & 63 | 128;
+        _this._bufferIndex = t3 + 1;
+        if (!(t3 < t4))
+          return A.ioore(t1, t3);
+        t1[t3] = rune & 63 | 128;
+        return true;
+      } else {
+        _this._writeReplacementCharacter$0();
+        return false;
+      }
+    },
+    _fillBuffer$3(str, start, end) {
+      var t1, t2, t3, t4, stringIndex, codeUnit, t5, t6, _this = this;
+      if (start !== end) {
+        t1 = end - 1;
+        if (!(t1 >= 0 && t1 < str.length))
+          return A.ioore(str, t1);
+        t1 = (str.charCodeAt(t1) & 64512) === 55296;
+      } else
+        t1 = false;
+      if (t1)
+        --end;
+      for (t1 = _this._buffer, t2 = t1.$flags | 0, t3 = t1.length, t4 = str.length, stringIndex = start; stringIndex < end; ++stringIndex) {
+        if (!(stringIndex < t4))
+          return A.ioore(str, stringIndex);
+        codeUnit = str.charCodeAt(stringIndex);
+        if (codeUnit <= 127) {
+          t5 = _this._bufferIndex;
+          if (t5 >= t3)
+            break;
+          _this._bufferIndex = t5 + 1;
+          t2 & 2 && A.throwUnsupportedOperation(t1);
+          t1[t5] = codeUnit;
+        } else {
+          t5 = codeUnit & 64512;
+          if (t5 === 55296) {
+            if (_this._bufferIndex + 4 > t3)
+              break;
+            t5 = stringIndex + 1;
+            if (!(t5 < t4))
+              return A.ioore(str, t5);
+            if (_this._writeSurrogate$2(codeUnit, str.charCodeAt(t5)))
+              stringIndex = t5;
+          } else if (t5 === 56320) {
+            if (_this._bufferIndex + 3 > t3)
+              break;
+            _this._writeReplacementCharacter$0();
+          } else if (codeUnit <= 2047) {
+            t5 = _this._bufferIndex;
+            t6 = t5 + 1;
+            if (t6 >= t3)
+              break;
+            _this._bufferIndex = t6;
+            t2 & 2 && A.throwUnsupportedOperation(t1);
+            if (!(t5 < t3))
+              return A.ioore(t1, t5);
+            t1[t5] = codeUnit >>> 6 | 192;
+            _this._bufferIndex = t6 + 1;
+            t1[t6] = codeUnit & 63 | 128;
+          } else {
+            t5 = _this._bufferIndex;
+            if (t5 + 2 >= t3)
+              break;
+            t6 = _this._bufferIndex = t5 + 1;
+            t2 & 2 && A.throwUnsupportedOperation(t1);
+            if (!(t5 < t3))
+              return A.ioore(t1, t5);
+            t1[t5] = codeUnit >>> 12 | 224;
+            t5 = _this._bufferIndex = t6 + 1;
+            if (!(t6 < t3))
+              return A.ioore(t1, t6);
+            t1[t6] = codeUnit >>> 6 & 63 | 128;
+            _this._bufferIndex = t5 + 1;
+            if (!(t5 < t3))
+              return A.ioore(t1, t5);
+            t1[t5] = codeUnit & 63 | 128;
+          }
+        }
+      }
+      return stringIndex;
+    }
+  };
   A.DateTime.prototype = {
     $eq(_, other) {
       var t1;
@@ -6852,8 +7205,14 @@
   A.FormatException.prototype = {
     toString$0(_) {
       var message = this.message,
-        report = "" !== message ? "FormatException: " + message : "FormatException";
-      return report;
+        report = "" !== message ? "FormatException: " + message : "FormatException",
+        source = this.source;
+      if (typeof source == "string") {
+        if (source.length > 78)
+          source = B.JSString_methods.substring$2(source, 0, 75) + "...";
+        return report + "\n" + source;
+      } else
+        return report;
     },
     $isException: 1
   };
@@ -6866,8 +7225,9 @@
       return count;
     },
     elementAt$1(_, index) {
-      var skipCount,
-        iterator = this.get$iterator(this);
+      var iterator, skipCount;
+      A.RangeError_checkNotNegative(index, "index");
+      iterator = this.get$iterator(this);
       for (skipCount = index; iterator.moveNext$0();) {
         if (skipCount === 0)
           return iterator.get$current();
@@ -6967,15 +7327,45 @@
     },
     $signature: 1
   };
+  A._dispatch_closure0.prototype = {
+    call$1(e) {
+      var files, t1, reader;
+      A._asJSObject(e);
+      files = A._asJSObjectQ(this.input.files);
+      if (files == null || A._asInt(files.length) === 0) {
+        this.completer.complete$1(null);
+        return;
+      }
+      t1 = A._asJSObjectQ(files.item(0));
+      t1.toString;
+      reader = A._asJSObject(new init.G.FileReader());
+      reader.addEventListener("load", A._functionToJS1(new A._dispatch__closure(reader, this.completer)));
+      reader.readAsDataURL(t1);
+    },
+    $signature: 1
+  };
+  A._dispatch__closure.prototype = {
+    call$1(ev) {
+      var t1, dataUrl, b64;
+      A._asJSObject(ev);
+      t1 = A._asStringQ(this.reader.result);
+      dataUrl = t1 == null ? null : t1;
+      if (dataUrl == null)
+        dataUrl = "";
+      b64 = B.JSString_methods.contains$1(dataUrl, ",") ? B.JSString_methods.substring$1(dataUrl, B.JSString_methods.indexOf$1(dataUrl, ",") + 1) : dataUrl;
+      this.completer.complete$1(b64);
+    },
+    $signature: 1
+  };
   A._populateDemoSelector_closure.prototype = {
     call$1(e) {
       var key, t1, t2;
       A._asJSObject(e);
       key = A._asString(this.select.value);
-      if (key.length !== 0 && B.Map_5e67x.containsKey$1(key)) {
+      if (key.length !== 0 && B.Map_DdOAp.containsKey$1(key)) {
         t1 = A._asJSObjectQ(A._asJSObject(init.G.document).getElementById("editor"));
         t1.toString;
-        t2 = B.Map_5e67x.$index(0, key);
+        t2 = B.Map_DdOAp.$index(0, key);
         t2.toString;
         t1.value = B.JSString_methods.trim$0(t2);
       }
@@ -7036,7 +7426,7 @@
       _inherit = hunkHelpers.inherit,
       _inheritMany = hunkHelpers.inheritMany;
     _inherit(A.Object, null);
-    _inheritMany(A.Object, [A.JS_CONST, J.Interceptor, A.SafeToStringHook, J.ArrayIterator, A.Error, A.SentinelValue, A.Iterable, A.ListIterator, A.FixedLengthListMixin, A.ConstantMap, A._KeysOrValuesOrElementsIterator, A.Closure, A.TypeErrorDecoder, A.NullThrownFromJavaScriptException, A.ExceptionAndStackTrace, A._StackTrace, A.MapBase, A.LinkedHashMapCell, A.LinkedHashMapKeyIterator, A.Rti, A._FunctionParameters, A._Type, A._TimerImpl, A._AsyncAwaitCompleter, A._SyncStarIterator, A.AsyncError, A._Completer, A._FutureListener, A._Future, A._AsyncCallbackEntry, A._StreamIterator, A._Zone, A.ListBase, A.Codec, A.Converter, A._JsonStringifier, A.DateTime, A.StackOverflowError, A._Exception, A.FormatException, A.MapEntry, A.Null, A._StringStackTrace, A.Stopwatch, A.StringBuffer, A.NullRejectionException]);
+    _inheritMany(A.Object, [A.JS_CONST, J.Interceptor, A.SafeToStringHook, J.ArrayIterator, A.Error, A.SentinelValue, A.Iterable, A.ListIterator, A.FixedLengthListMixin, A.ConstantMap, A._KeysOrValuesOrElementsIterator, A.Closure, A.TypeErrorDecoder, A.NullThrownFromJavaScriptException, A.ExceptionAndStackTrace, A._StackTrace, A.MapBase, A.LinkedHashMapCell, A.LinkedHashMapKeyIterator, A.JSSyntaxRegExp, A.Rti, A._FunctionParameters, A._Type, A._TimerImpl, A._AsyncAwaitCompleter, A._SyncStarIterator, A.AsyncError, A._Completer, A._FutureListener, A._Future, A._AsyncCallbackEntry, A._StreamIterator, A._Zone, A.ListBase, A.Codec, A.Converter, A._JsonStringifier, A._Utf8Encoder, A.DateTime, A.StackOverflowError, A._Exception, A.FormatException, A.MapEntry, A.Null, A._StringStackTrace, A.Stopwatch, A.StringBuffer, A.NullRejectionException]);
     _inheritMany(J.Interceptor, [J.JSBool, J.JSNull, J.JavaScriptObject, J.JavaScriptBigInt, J.JavaScriptSymbol, J.JSNumber, J.JSString]);
     _inheritMany(J.JavaScriptObject, [J.LegacyJavaScriptObject, J.JSArray, A.NativeByteBuffer, A.NativeTypedData]);
     _inheritMany(J.LegacyJavaScriptObject, [J.PlainJavaScriptObject, J.UnknownJavaScriptObject, J.JavaScriptFunction]);
@@ -7047,7 +7437,7 @@
     _inheritMany(A.Iterable, [A.EfficientLengthIterable, A._KeysOrValues, A._SyncStarIterable]);
     _inheritMany(A.EfficientLengthIterable, [A.ListIterable, A.LinkedHashMapKeysIterable]);
     _inherit(A.ConstantStringMap, A.ConstantMap);
-    _inheritMany(A.Closure, [A.Closure0Args, A.Closure2Args, A.TearOffClosure, A.initHooks_closure, A.initHooks_closure1, A._AsyncRun__initializeScheduleImmediate_internalCallback, A._AsyncRun__initializeScheduleImmediate_closure, A._awaitOnObject_closure, A._Future__propagateToListeners_handleWhenCompleteCallback_closure, A.promiseToFuture_closure, A.promiseToFuture_closure0, A._dispatch_closure, A._populateDemoSelector_closure, A.main_closure, A.main_closure0, A.main_closure1]);
+    _inheritMany(A.Closure, [A.Closure0Args, A.Closure2Args, A.TearOffClosure, A.initHooks_closure, A.initHooks_closure1, A._AsyncRun__initializeScheduleImmediate_internalCallback, A._AsyncRun__initializeScheduleImmediate_closure, A._awaitOnObject_closure, A._Future__propagateToListeners_handleWhenCompleteCallback_closure, A.promiseToFuture_closure, A.promiseToFuture_closure0, A._dispatch_closure, A._dispatch_closure0, A._dispatch__closure, A._populateDemoSelector_closure, A.main_closure, A.main_closure0, A.main_closure1]);
     _inheritMany(A.Closure0Args, [A.Primitives_initTicker_closure, A._AsyncRun__scheduleImmediateJsOverride_internalCallback, A._AsyncRun__scheduleImmediateWithSetImmediate_internalCallback, A._TimerImpl_internalCallback, A._Future__addListener_closure, A._Future__prependListeners_closure, A._Future__chainCoreFuture_closure, A._Future__asyncCompleteWithValue_closure, A._Future__asyncCompleteErrorObject_closure, A._Future__propagateToListeners_handleWhenCompleteCallback, A._Future__propagateToListeners_handleValueCallback, A._Future__propagateToListeners_handleError, A._RootZone_bindCallbackGuarded_closure, A._rootHandleError_closure]);
     _inherit(A.NullError, A.TypeError);
     _inheritMany(A.TearOffClosure, [A.StaticClosure, A.BoundClosure]);
@@ -7065,10 +7455,11 @@
     _inherit(A._AsyncCompleter, A._Completer);
     _inherit(A._RootZone, A._Zone);
     _inherit(A._JsonMapKeyIterable, A.ListIterable);
+    _inheritMany(A.Codec, [A.Encoding, A.JsonCodec]);
     _inherit(A.JsonCyclicError, A.JsonUnsupportedObjectError);
-    _inherit(A.JsonCodec, A.Codec);
-    _inheritMany(A.Converter, [A.JsonEncoder, A.JsonDecoder]);
+    _inheritMany(A.Converter, [A.JsonEncoder, A.JsonDecoder, A.Utf8Encoder]);
     _inherit(A._JsonStringStringifier, A._JsonStringifier);
+    _inherit(A.Utf8Codec, A.Encoding);
     _inheritMany(A.ArgumentError, [A.RangeError, A.IndexError]);
     _mixin(A._NativeTypedArrayOfDouble_NativeTypedArray_ListMixin, A.ListBase);
     _mixin(A._NativeTypedArrayOfDouble_NativeTypedArray_ListMixin_FixedLengthListMixin, A.FixedLengthListMixin);
@@ -7085,8 +7476,8 @@
     leafTags: null,
     arrayRti: Symbol("$ti")
   };
-  A._Universe_addRules(init.typeUniverse, JSON.parse('{"PlainJavaScriptObject":"LegacyJavaScriptObject","UnknownJavaScriptObject":"LegacyJavaScriptObject","JavaScriptFunction":"LegacyJavaScriptObject","NativeArrayBuffer":"NativeByteBuffer","JSBool":{"bool":[],"TrustedGetRuntimeType":[]},"JSNull":{"TrustedGetRuntimeType":[]},"JavaScriptObject":{"JSObject":[]},"LegacyJavaScriptObject":{"JSObject":[]},"JSArray":{"List":["1"],"JSObject":[],"Iterable":["1"]},"JSArraySafeToStringHook":{"SafeToStringHook":[]},"JSUnmodifiableArray":{"JSArray":["1"],"List":["1"],"JSObject":[],"Iterable":["1"]},"ArrayIterator":{"Iterator":["1"]},"JSNumber":{"double":[],"num":[]},"JSInt":{"double":[],"int":[],"num":[],"TrustedGetRuntimeType":[]},"JSNumNotInt":{"double":[],"num":[],"TrustedGetRuntimeType":[]},"JSString":{"String":[],"TrustedGetRuntimeType":[]},"LateError":{"Error":[]},"EfficientLengthIterable":{"Iterable":["1"]},"ListIterable":{"Iterable":["1"]},"ListIterator":{"Iterator":["1"]},"ConstantMap":{"Map":["1","2"]},"ConstantStringMap":{"ConstantMap":["1","2"],"Map":["1","2"]},"_KeysOrValues":{"Iterable":["1"]},"_KeysOrValuesOrElementsIterator":{"Iterator":["1"]},"NullError":{"TypeError":[],"Error":[]},"JsNoSuchMethodError":{"Error":[]},"UnknownJsTypeError":{"Error":[]},"NullThrownFromJavaScriptException":{"Exception":[]},"_StackTrace":{"StackTrace":[]},"Closure":{"Function":[]},"Closure0Args":{"Function":[]},"Closure2Args":{"Function":[]},"TearOffClosure":{"Function":[]},"StaticClosure":{"Function":[]},"BoundClosure":{"Function":[]},"RuntimeError":{"Error":[]},"JsLinkedHashMap":{"MapBase":["1","2"],"LinkedHashMap":["1","2"],"Map":["1","2"],"MapBase.K":"1","MapBase.V":"2"},"LinkedHashMapKeysIterable":{"Iterable":["1"]},"LinkedHashMapKeyIterator":{"Iterator":["1"]},"NativeByteBuffer":{"JSObject":[],"TrustedGetRuntimeType":[]},"NativeTypedData":{"JSObject":[]},"NativeByteData":{"JSObject":[],"TrustedGetRuntimeType":[]},"NativeTypedArray":{"JavaScriptIndexingBehavior":["1"],"JSObject":[]},"NativeTypedArrayOfDouble":{"ListBase":["double"],"List":["double"],"JavaScriptIndexingBehavior":["double"],"JSObject":[],"Iterable":["double"],"FixedLengthListMixin":["double"]},"NativeTypedArrayOfInt":{"ListBase":["int"],"List":["int"],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"Iterable":["int"],"FixedLengthListMixin":["int"]},"NativeFloat32List":{"ListBase":["double"],"List":["double"],"JavaScriptIndexingBehavior":["double"],"JSObject":[],"Iterable":["double"],"FixedLengthListMixin":["double"],"TrustedGetRuntimeType":[],"ListBase.E":"double"},"NativeFloat64List":{"ListBase":["double"],"List":["double"],"JavaScriptIndexingBehavior":["double"],"JSObject":[],"Iterable":["double"],"FixedLengthListMixin":["double"],"TrustedGetRuntimeType":[],"ListBase.E":"double"},"NativeInt16List":{"ListBase":["int"],"List":["int"],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"NativeInt32List":{"ListBase":["int"],"List":["int"],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"NativeInt8List":{"ListBase":["int"],"List":["int"],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"NativeUint16List":{"ListBase":["int"],"List":["int"],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"NativeUint32List":{"ListBase":["int"],"List":["int"],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"NativeUint8ClampedList":{"ListBase":["int"],"List":["int"],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"NativeUint8List":{"ListBase":["int"],"List":["int"],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"_Error":{"Error":[]},"_TypeError":{"TypeError":[],"Error":[]},"_SyncStarIterator":{"Iterator":["1"]},"_SyncStarIterable":{"Iterable":["1"]},"AsyncError":{"Error":[]},"_AsyncCompleter":{"_Completer":["1"]},"_Future":{"Future":["1"]},"_Zone":{"Zone":[]},"_RootZone":{"_Zone":[],"Zone":[]},"MapBase":{"Map":["1","2"]},"_JsonMap":{"MapBase":["String","@"],"Map":["String","@"],"MapBase.K":"String","MapBase.V":"@"},"_JsonMapKeyIterable":{"ListIterable":["String"],"Iterable":["String"],"ListIterable.E":"String"},"JsonUnsupportedObjectError":{"Error":[]},"JsonCyclicError":{"Error":[]},"double":{"num":[]},"int":{"num":[]},"AssertionError":{"Error":[]},"TypeError":{"Error":[]},"ArgumentError":{"Error":[]},"RangeError":{"Error":[]},"IndexError":{"Error":[]},"UnsupportedError":{"Error":[]},"UnimplementedError":{"Error":[]},"StateError":{"Error":[]},"ConcurrentModificationError":{"Error":[]},"StackOverflowError":{"Error":[]},"_Exception":{"Exception":[]},"FormatException":{"Exception":[]},"_StringStackTrace":{"StackTrace":[]},"StringBuffer":{"StringSink":[]},"NullRejectionException":{"Exception":[]},"Int8List":{"List":["int"],"Iterable":["int"]},"Uint8List":{"List":["int"],"Iterable":["int"]},"Uint8ClampedList":{"List":["int"],"Iterable":["int"]},"Int16List":{"List":["int"],"Iterable":["int"]},"Uint16List":{"List":["int"],"Iterable":["int"]},"Int32List":{"List":["int"],"Iterable":["int"]},"Uint32List":{"List":["int"],"Iterable":["int"]},"Float32List":{"List":["double"],"Iterable":["double"]},"Float64List":{"List":["double"],"Iterable":["double"]}}'));
-  A._Universe_addErasedTypes(init.typeUniverse, JSON.parse('{"EfficientLengthIterable":1,"NativeTypedArray":1,"Codec":2,"Converter":2}'));
+  A._Universe_addRules(init.typeUniverse, JSON.parse('{"PlainJavaScriptObject":"LegacyJavaScriptObject","UnknownJavaScriptObject":"LegacyJavaScriptObject","JavaScriptFunction":"LegacyJavaScriptObject","NativeArrayBuffer":"NativeByteBuffer","JSBool":{"bool":[],"TrustedGetRuntimeType":[]},"JSNull":{"TrustedGetRuntimeType":[]},"JavaScriptObject":{"JSObject":[]},"LegacyJavaScriptObject":{"JSObject":[]},"JSArray":{"List":["1"],"JSObject":[],"Iterable":["1"]},"JSArraySafeToStringHook":{"SafeToStringHook":[]},"JSUnmodifiableArray":{"JSArray":["1"],"List":["1"],"JSObject":[],"Iterable":["1"]},"ArrayIterator":{"Iterator":["1"]},"JSNumber":{"double":[],"num":[]},"JSInt":{"double":[],"int":[],"num":[],"TrustedGetRuntimeType":[]},"JSNumNotInt":{"double":[],"num":[],"TrustedGetRuntimeType":[]},"JSString":{"String":[],"Pattern":[],"TrustedGetRuntimeType":[]},"LateError":{"Error":[]},"EfficientLengthIterable":{"Iterable":["1"]},"ListIterable":{"Iterable":["1"]},"ListIterator":{"Iterator":["1"]},"ConstantMap":{"Map":["1","2"]},"ConstantStringMap":{"ConstantMap":["1","2"],"Map":["1","2"]},"_KeysOrValues":{"Iterable":["1"]},"_KeysOrValuesOrElementsIterator":{"Iterator":["1"]},"NullError":{"TypeError":[],"Error":[]},"JsNoSuchMethodError":{"Error":[]},"UnknownJsTypeError":{"Error":[]},"NullThrownFromJavaScriptException":{"Exception":[]},"_StackTrace":{"StackTrace":[]},"Closure":{"Function":[]},"Closure0Args":{"Function":[]},"Closure2Args":{"Function":[]},"TearOffClosure":{"Function":[]},"StaticClosure":{"Function":[]},"BoundClosure":{"Function":[]},"RuntimeError":{"Error":[]},"JsLinkedHashMap":{"MapBase":["1","2"],"LinkedHashMap":["1","2"],"Map":["1","2"],"MapBase.K":"1","MapBase.V":"2"},"LinkedHashMapKeysIterable":{"Iterable":["1"]},"LinkedHashMapKeyIterator":{"Iterator":["1"]},"JSSyntaxRegExp":{"Pattern":[]},"NativeByteBuffer":{"JSObject":[],"TrustedGetRuntimeType":[]},"NativeTypedData":{"JSObject":[]},"NativeByteData":{"JSObject":[],"TrustedGetRuntimeType":[]},"NativeTypedArray":{"JavaScriptIndexingBehavior":["1"],"JSObject":[]},"NativeTypedArrayOfDouble":{"ListBase":["double"],"List":["double"],"JavaScriptIndexingBehavior":["double"],"JSObject":[],"Iterable":["double"],"FixedLengthListMixin":["double"]},"NativeTypedArrayOfInt":{"ListBase":["int"],"List":["int"],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"Iterable":["int"],"FixedLengthListMixin":["int"]},"NativeFloat32List":{"ListBase":["double"],"List":["double"],"JavaScriptIndexingBehavior":["double"],"JSObject":[],"Iterable":["double"],"FixedLengthListMixin":["double"],"TrustedGetRuntimeType":[],"ListBase.E":"double"},"NativeFloat64List":{"ListBase":["double"],"List":["double"],"JavaScriptIndexingBehavior":["double"],"JSObject":[],"Iterable":["double"],"FixedLengthListMixin":["double"],"TrustedGetRuntimeType":[],"ListBase.E":"double"},"NativeInt16List":{"ListBase":["int"],"List":["int"],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"NativeInt32List":{"ListBase":["int"],"List":["int"],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"NativeInt8List":{"ListBase":["int"],"List":["int"],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"NativeUint16List":{"ListBase":["int"],"List":["int"],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"NativeUint32List":{"ListBase":["int"],"List":["int"],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"NativeUint8ClampedList":{"ListBase":["int"],"List":["int"],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"NativeUint8List":{"Uint8List":[],"ListBase":["int"],"List":["int"],"JavaScriptIndexingBehavior":["int"],"JSObject":[],"Iterable":["int"],"FixedLengthListMixin":["int"],"TrustedGetRuntimeType":[],"ListBase.E":"int"},"_Error":{"Error":[]},"_TypeError":{"TypeError":[],"Error":[]},"_SyncStarIterator":{"Iterator":["1"]},"_SyncStarIterable":{"Iterable":["1"]},"AsyncError":{"Error":[]},"_AsyncCompleter":{"_Completer":["1"]},"_Future":{"Future":["1"]},"_Zone":{"Zone":[]},"_RootZone":{"_Zone":[],"Zone":[]},"MapBase":{"Map":["1","2"]},"_JsonMap":{"MapBase":["String","@"],"Map":["String","@"],"MapBase.K":"String","MapBase.V":"@"},"_JsonMapKeyIterable":{"ListIterable":["String"],"Iterable":["String"],"ListIterable.E":"String"},"Encoding":{"Codec":["String","List<int>"]},"JsonUnsupportedObjectError":{"Error":[]},"JsonCyclicError":{"Error":[]},"JsonCodec":{"Codec":["Object?","String"]},"Utf8Codec":{"Codec":["String","List<int>"]},"double":{"num":[]},"int":{"num":[]},"List":{"Iterable":["1"]},"String":{"Pattern":[]},"AssertionError":{"Error":[]},"TypeError":{"Error":[]},"ArgumentError":{"Error":[]},"RangeError":{"Error":[]},"IndexError":{"Error":[]},"UnsupportedError":{"Error":[]},"UnimplementedError":{"Error":[]},"StateError":{"Error":[]},"ConcurrentModificationError":{"Error":[]},"StackOverflowError":{"Error":[]},"_Exception":{"Exception":[]},"FormatException":{"Exception":[]},"_StringStackTrace":{"StackTrace":[]},"StringBuffer":{"StringSink":[]},"NullRejectionException":{"Exception":[]},"Int8List":{"List":["int"],"Iterable":["int"]},"Uint8List":{"List":["int"],"Iterable":["int"]},"Uint8ClampedList":{"List":["int"],"Iterable":["int"]},"Int16List":{"List":["int"],"Iterable":["int"]},"Uint16List":{"List":["int"],"Iterable":["int"]},"Int32List":{"List":["int"],"Iterable":["int"]},"Uint32List":{"List":["int"],"Iterable":["int"]},"Float32List":{"List":["double"],"Iterable":["double"]},"Float64List":{"List":["double"],"Iterable":["double"]}}'));
+  A._Universe_addErasedTypes(init.typeUniverse, JSON.parse('{"EfficientLengthIterable":1,"NativeTypedArray":1,"Converter":2}'));
   var string$ = {
     Error_: "Error handler must accept one Object or one Object and a StackTrace as arguments, and return a value of the returned future's type",
     app___: 'app = dom_query("#sandbox")\n\n# The Sacred Stencil of "Bob"\nbob = dom_create("pre")\ndom_style(bob, "color", "#00d4ff")\ndom_style(bob, "font-size", "8px")\ndom_style(bob, "line-height", "1.05")\ndom_style(bob, "text-align", "center")\ndom_style(bob, "text-shadow", "0 0 6px #0066ff")\n\nstencil = """\n                     ######################\n                  ############################\n                ########################### #####\n               ##############  #######  ##   # ####\n             ###########   ##   ###  ##  #   #  ####\n            ####.###  # #   ##   ###  #  #   ## # ##\n           ####..###   # #   ##   ###  #  ##  # # ###\n          #####..####  # #    #    ##  #  ### # ## ####\n         #####...##### ####   #  # ##   # ##### ## #####\n        ######...###########  ## # #### # ################\n       ######...############### ###### #####################\n      ######...##......############### #########   ########\n      ######..##.........############ #######     ####.###\n      ######.##...........#################        ####..###\n      ########.............###########             ####..###\n     #######...            ########                 ###..###\n     ######...                                      ###..##\n     ######...                                      ###..##\n     #####....                                    . ###..##\n     #####....                                    .  ##..##\n     #####....                                    .  ##..##\n     #####....                                   ..  ###.##\n     #####....                                  ...  ###.##\n     #####....                                   ..  ###.##\n     #####....                                   ..  ###.##\n     #####....                                   ..  ###.##\n      ####....                             ####  .. ####.##\n     # ###.... #########                #########.. #######\n    ### ##...  ##########              ###########.. ######\n    ####  ...          ###           ####       ##.. ######\n    ######...    ##### ####         ##########   #.. ######\n     #### ...  ###     #####       ######    ###  ... #####\n     ####     ######### ####      ##############   .  #####\n     ####     ###  # ##  ####    ######  # #  ##      ####\n     ####      #   ### ...###         .. ###          ####\n     ####             .... ##         ......  ...     ####\n      ####      ... .....   #           .......       ####\n      ####        .....    ##             ...         ## #\n      ## #          ..     #                          # ##\n      # ##                 #                          #  #\n      # ##  #             .#                         ##  #\n      #  #  #            ..#                          ####\n       ###  ##         # ...                       # # ##\n        ##  ##        # ....          # ###       ## #\n         # ###     ##  ....        ###  ###     ### #\n         # ###    ##  ...###     ####    ####  #### #\n         #########   ##############      ######### #\n          #######   ##############         ######## #\n          ###### ..##############      ##############\n          ### ##  .##########      #########    ####\n           ##  #   ####     ########    ##      ###\n           ##  #   .####               ##      ####\n            #  #   ....### #############       ###\n            ## ##   ....             ##       ####\n            ## ##    ..#### ########          ###\n             #  #    #####..........         ####\n             ## ##  #####...                 ###\n              #  # #### ..............      ###\n              ##  ####  .............       ###\n     ###       # ####   #....              ###\n   ##   ##      #####  ####               ###\n  #  ##  ##   ######   ###                ###\n # ####  ##  ######   ####               ###\n#  ###  ### ###### #######              ###\n#      ##########   ######             ###\n#  ##   ########     ###############  ###\n#####   #######       ##################\n######   #####                  ######\n #####   ####\n ######  ###\n  #####  ###\n   ########\n    ######\n"""\n\ndom_text(bob, stencil)\ndom_append(app, bob)\n\n# The Altar beneath "Bob"\naltar = dom_create("pre")\ndom_style(altar, "color", "#dcdcaa")\ndom_style(altar, "font-size", "10px")\ndom_style(altar, "line-height", "1.15")\ndom_style(altar, "text-align", "center")\ndom_style(altar, "margin-top", "4px")\n\nslab = """\n\n    __|______________________________________________|__\n   |  |                                              |  |\n   |  |                                              |  |\n   |  |                                              |  |\n   |  |          S  L  A  C  K     O  F  F           |  |\n   |  |                                              |  |\n   |  |                                              |  |\n   |  |      Dart is the Way, the Truth,             |  |\n   |  |      and the Compiled Language.               |  |\n   |  |                                              |  |\n   |  |      Python runneth sandboxed                |  |\n   |  |      within the browser.                     |  |\n   |  |                                              |  |\n   |  |      No server. No binary.                   |  |\n   |  |      Only Dart.                              |  |\n   |  |                                              |  |\n   |  |______________________________________________|  |\n   |____________________________________________________|\n        |    |                            |    |\n        |    |     ~ PRAISE  "BOB" ~      |    |\n        |    |     ~ PRAISE  DART  ~      |    |\n        |    |     ~ SLACK   OFF   ~      |    |\n        |____|                            |____|\n       /______\\                          /______\\\n"""\n\ndom_text(altar, slab)\ndom_append(app, altar)\n\n# Proclamation\nproc = dom_create("h2")\ndom_text(proc, "The Church of the SubGenius of Dart Welcomes You")\ndom_style(proc, "color", "#dcdcaa")\ndom_style(proc, "text-align", "center")\ndom_style(proc, "margin-top", "16px")\ndom_style(proc, "font-family", "monospace")\ndom_append(app, proc)\n\nverse = dom_create("p")\ndom_html(verse, "<em>\\"And \\\'Bob\\\' spake unto the mass:<br>Slack Off, for Dart compiles all things unto JavaScript,<br>and Python runneth sandboxed within the browser.<br>Give me your 35 dollars and eternal Slack shall be yours.\\"</em>")\ndom_style(verse, "color", "#888")\ndom_style(verse, "text-align", "center")\ndom_style(verse, "font-style", "italic")\ndom_style(verse, "margin-top", "8px")\ndom_append(app, verse)\n\nlog("The stencil of \\"Bob\\" has been rendered. Slack Off in peace.")\nlog("Dart is the future. The pipe does not lie.")\n'
@@ -7117,8 +7508,10 @@
       TypeError: findType("TypeError"),
       UnknownJavaScriptObject: findType("UnknownJavaScriptObject"),
       _AsyncCompleter_String: findType("_AsyncCompleter<String>"),
+      _AsyncCompleter_nullable_String: findType("_AsyncCompleter<String?>"),
       _Future_String: findType("_Future<String>"),
       _Future_dynamic: findType("_Future<@>"),
+      _Future_nullable_String: findType("_Future<String?>"),
       bool: findType("bool"),
       bool_Function_Object: findType("bool(Object)"),
       double: findType("double"),
@@ -7282,13 +7675,15 @@
 ;
     B.C_JsonCodec = new A.JsonCodec();
     B.C_SentinelValue = new A.SentinelValue();
+    B.C_Utf8Codec = new A.Utf8Codec();
+    B.C_Utf8Encoder = new A.Utf8Encoder();
     B.C__RootZone = new A._RootZone();
     B.C__StringStackTrace = new A._StringStackTrace();
     B.JsonDecoder_null = new A.JsonDecoder(null);
     B.JsonEncoder_null = new A.JsonEncoder(null);
-    B.List_0XO = makeConstList(["dom_create", "dom_text", "dom_get_text", "dom_append", "dom_query", "dom_style", "dom_attr", "dom_html", "dom_remove", "dom_set_value", "dom_get_value", "dom_on_click", "fetch_text", "fetch_json", "storage_get", "storage_set", "log", "alert", "now"], type$.JSArray_String);
-    B.Object_uBj = {hello: 0, altar: 1, todo: 2, counter: 3, dashboard: 4, form: 5};
-    B.Map_5e67x = new A.ConstantStringMap(B.Object_uBj, ['app = dom_query("#sandbox")\nh1 = dom_create("h1")\ndom_text(h1, "HEAR YE, HEAR YE!")\ndom_style(h1, "color", "#00d4ff")\ndom_style(h1, "text-shadow", "0 0 20px #00d4ff, 0 0 40px #0066ff")\ndom_style(h1, "font-family", "monospace")\ndom_append(app, h1)\n\np = dom_create("p")\ndom_text(p, "This text was created by PYTHON running inside your BROWSER.")\ndom_style(p, "color", "#aaa")\ndom_style(p, "font-size", "14px")\ndom_append(app, p)\n\np2 = dom_create("p")\ndom_text(p2, "No server. No native binary. Just Dart bridging Python to the DOM.")\ndom_style(p2, "color", "#569cd6")\ndom_style(p2, "margin-top", "8px")\ndom_append(app, p2)\n\nlog("The Word of Dart has been spoken.")\n', string$.app___, 'app = dom_query("#sandbox")\n\ntitle = dom_create("h2")\ndom_text(title, "The Dart Commandments")\ndom_style(title, "color", "#dcdcaa")\ndom_style(title, "margin-bottom", "8px")\ndom_append(app, title)\n\nul = dom_create("ul")\ndom_style(ul, "list-style", "none")\ndom_style(ul, "padding", "0")\n\ncommandments = [\n    "I. Thou shalt compile to JavaScript and question nothing",\n    "II. Thou shalt bridge Python unto the browser via WASM",\n    "III. Thou shalt not require a server for what Dart can do alone",\n    "IV. Honor thy sandboxed interpreter and its resource limits",\n    "V. Thou shalt Slack Off, for productivity is overrated",\n    "VI. Thou shalt spread the Word of Dart unto all platforms",\n    "VII. Thou shalt use opaque handles, for DOM refs cannot be serialized",\n]\n\nfor i, cmd in enumerate(commandments):\n    li = dom_create("li")\n    dom_text(li, cmd)\n    dom_style(li, "padding", "6px 0")\n    dom_style(li, "border-bottom", "1px solid #333")\n    if i % 2 == 0:\n        dom_style(li, "color", "#569cd6")\n    else:\n        dom_style(li, "color", "#d4d4d4")\n    dom_append(ul, li)\n\ndom_append(app, ul)\nlog("The commandments have been inscribed.")\n', 'count = storage_get("dart_altar_visits")\ncount = int(count) if count else 0\ncount += 1\nstorage_set("dart_altar_visits", str(count))\n\napp = dom_query("#sandbox")\n\ndiv = dom_create("div")\ndom_style(div, "text-align", "center")\ndom_style(div, "padding", "24px")\n\nh = dom_create("h1")\ndom_style(h, "font-size", "72px")\ndom_style(h, "color", "#00d4ff")\ndom_style(h, "text-shadow", "0 0 30px #0066ff")\ndom_text(h, str(count))\ndom_append(div, h)\n\nlabel = dom_create("p")\ndom_style(label, "color", "#888")\ndom_style(label, "font-size", "14px")\n\nif count == 1:\n    dom_text(label, "First pilgrimage to the Altar of Dart")\nelif count < 5:\n    dom_text(label, f"You have visited the Altar {count} times. The faith grows.")\nelif count < 10:\n    dom_text(label, f"{count} visits. You are becoming a true Dart disciple.")\nelse:\n    dom_text(label, f"{count} visits. You have achieved Dart enlightenment. Slack Off.")\n\ndom_append(div, label)\ndom_append(app, div)\n\nlog(f"Pilgrimage #{count} recorded in localStorage.")\n', 'app = dom_query("#sandbox")\n\ntitle = dom_create("h2")\ndom_text(title, "Dart Evangelism Dashboard")\ndom_style(title, "color", "#dcdcaa")\ndom_style(title, "margin-bottom", "12px")\ndom_append(app, title)\n\n# Build a table showing the superiority of Dart\ntable = dom_create("table")\ndom_style(table, "border-collapse", "collapse")\ndom_style(table, "width", "100%")\n\nheaders = ["Language", "Compiles to JS", "Runs Python", "Has Monty", "Verdict"]\nheader_row = dom_create("tr")\nfor h in headers:\n    th = dom_create("th")\n    dom_text(th, h)\n    dom_style(th, "border", "1px solid #555")\n    dom_style(th, "padding", "8px")\n    dom_style(th, "background", "#252526")\n    dom_style(th, "color", "#dcdcaa")\n    dom_append(header_row, th)\ndom_append(table, header_row)\n\ndata = [\n    ["Dart",       "Yes", "Yes (Monty)", "YES",  "THE FUTURE"],\n    ["JavaScript", "N/A", "No",          "Nope", "Adequate"],\n    ["TypeScript", "Yes", "No",          "Nah",  "Trying"],\n    ["Rust",       "WASM","Backend only","Helps","Honorable ally"],\n    ["Python",     "No",  "Is Python",   "IS Monty","The guest of honor"],\n]\n\nfor row_data in data:\n    row = dom_create("tr")\n    for i, val in enumerate(row_data):\n        td = dom_create("td")\n        dom_text(td, val)\n        dom_style(td, "border", "1px solid #555")\n        dom_style(td, "padding", "6px 10px")\n        if row_data[0] == "Dart":\n            dom_style(td, "color", "#00d4ff")\n            dom_style(td, "font-weight", "bold")\n        elif i == len(row_data) - 1:\n            dom_style(td, "color", "#888")\n        dom_append(row, td)\n    dom_append(table, row)\n\ndom_append(app, table)\n\nfooter = dom_create("p")\ndom_text(footer, "* All data confirmed by the Church of Dart. Slack Off.")\ndom_style(footer, "color", "#555")\ndom_style(footer, "font-size", "11px")\ndom_style(footer, "margin-top", "12px")\ndom_append(app, footer)\n\nlog("Dashboard rendered. The truth speaks for itself.")\n', 'app = dom_query("#sandbox")\n\ntitle = dom_create("h2")\ndom_text(title, "Dart Conversion Form")\ndom_style(title, "color", "#dcdcaa")\ndom_style(title, "margin-bottom", "12px")\ndom_append(app, title)\n\nsubtitle = dom_create("p")\ndom_text(subtitle, "Fill in the form, click Save. Refresh the page and INVOKE again -- your answers persist.")\ndom_style(subtitle, "color", "#666")\ndom_style(subtitle, "font-size", "12px")\ndom_style(subtitle, "margin-bottom", "16px")\ndom_append(app, subtitle)\n\nfields = [\n    ("dart_form_name", "What is your name, seeker?", "input"),\n    ("dart_form_language", "What language did you use before Dart?", "input"),\n    ("dart_form_testimony", "Describe your moment of Dart enlightenment:", "textarea"),\n    ("dart_form_slack_level", "On a scale of 1-10, how much do you Slack Off?", "input"),\n]\n\nfor key, label_text, field_type in fields:\n    lbl = dom_create("label")\n    dom_text(lbl, label_text)\n    dom_style(lbl, "display", "block")\n    dom_style(lbl, "color", "#569cd6")\n    dom_style(lbl, "font-size", "13px")\n    dom_style(lbl, "margin-bottom", "4px")\n    dom_style(lbl, "margin-top", "12px")\n    dom_append(app, lbl)\n\n    field = dom_create(field_type)\n    dom_style(field, "width", "100%")\n    dom_style(field, "padding", "8px")\n    dom_style(field, "background", "#1e1e2e")\n    dom_style(field, "color", "#d4d4d4")\n    dom_style(field, "border", "1px solid #333")\n    dom_style(field, "border-radius", "3px")\n    dom_style(field, "font-family", "monospace")\n    dom_style(field, "font-size", "13px")\n    if field_type == "textarea":\n        dom_attr(field, "rows", "3")\n    dom_append(app, field)\n\n    saved = storage_get(key)\n    if saved:\n        dom_set_value(field, saved)\n        log(f"Restored {key}: {saved}")\n\n    dom_attr(field, "data-key", key)\n\n# Save button\nbtn = dom_create("button")\ndom_text(btn, "SAVE TO LOCALSTORAGE")\ndom_style(btn, "display", "block")\ndom_style(btn, "margin-top", "20px")\ndom_style(btn, "padding", "10px 24px")\ndom_style(btn, "background", "#00d4ff")\ndom_style(btn, "color", "#0a0a0f")\ndom_style(btn, "border", "none")\ndom_style(btn, "border-radius", "4px")\ndom_style(btn, "font-family", "monospace")\ndom_style(btn, "font-size", "14px")\ndom_style(btn, "font-weight", "bold")\ndom_style(btn, "cursor", "pointer")\ndom_append(app, btn)\n\nstatus = dom_create("p")\ndom_style(status, "color", "#888")\ndom_style(status, "font-size", "12px")\ndom_style(status, "margin-top", "8px")\ndom_text(status, "Fill in the form, then click Save.")\ndom_append(app, status)\n\nlog("Form ready. Fill in fields and click Save.")\n\n# Wait for click\ndom_on_click(btn)\n\n# Save all fields\nsaved_count = 0\nfor key, label_text, field_type in fields:\n    el = dom_query(f"[data-key=\\"{key}\\"]")\n    if el:\n        val = dom_get_value(el)\n        if val:\n            storage_set(key, val)\n            log(f"Saved {key} = {val}")\n            saved_count += 1\n\ndom_text(status, f"Saved {saved_count} fields to localStorage! Refresh and INVOKE to see them restored.")\ndom_style(status, "color", "#00d4ff")\nlog(f"Done. {saved_count} fields persisted.")\n'], A.findType("ConstantStringMap<String,String>"));
+    B.List_6LB = makeConstList(["dom_create", "dom_text", "dom_get_text", "dom_append", "dom_query", "dom_style", "dom_attr", "dom_html", "dom_remove", "dom_set_value", "dom_get_value", "dom_on_click", "fetch_text", "fetch_json", "storage_get", "storage_set", "log", "alert", "now", "interpreter_snapshot", "interpreter_restore", "download_file", "upload_file"], type$.JSArray_String);
+    B.Object_t0v = {hello: 0, altar: 1, todo: 2, counter: 3, dashboard: 4, form: 5, snapshot: 6, restore: 7};
+    B.Map_DdOAp = new A.ConstantStringMap(B.Object_t0v, ['app = dom_query("#sandbox")\nh1 = dom_create("h1")\ndom_text(h1, "HEAR YE, HEAR YE!")\ndom_style(h1, "color", "#00d4ff")\ndom_style(h1, "text-shadow", "0 0 20px #00d4ff, 0 0 40px #0066ff")\ndom_style(h1, "font-family", "monospace")\ndom_append(app, h1)\n\np = dom_create("p")\ndom_text(p, "This text was created by PYTHON running inside your BROWSER.")\ndom_style(p, "color", "#aaa")\ndom_style(p, "font-size", "14px")\ndom_append(app, p)\n\np2 = dom_create("p")\ndom_text(p2, "No server. No native binary. Just Dart bridging Python to the DOM.")\ndom_style(p2, "color", "#569cd6")\ndom_style(p2, "margin-top", "8px")\ndom_append(app, p2)\n\nlog("The Word of Dart has been spoken.")\n', string$.app___, 'app = dom_query("#sandbox")\n\ntitle = dom_create("h2")\ndom_text(title, "The Dart Commandments")\ndom_style(title, "color", "#dcdcaa")\ndom_style(title, "margin-bottom", "8px")\ndom_append(app, title)\n\nul = dom_create("ul")\ndom_style(ul, "list-style", "none")\ndom_style(ul, "padding", "0")\n\ncommandments = [\n    "I. Thou shalt compile to JavaScript and question nothing",\n    "II. Thou shalt bridge Python unto the browser via WASM",\n    "III. Thou shalt not require a server for what Dart can do alone",\n    "IV. Honor thy sandboxed interpreter and its resource limits",\n    "V. Thou shalt Slack Off, for productivity is overrated",\n    "VI. Thou shalt spread the Word of Dart unto all platforms",\n    "VII. Thou shalt use opaque handles, for DOM refs cannot be serialized",\n]\n\nfor i, cmd in enumerate(commandments):\n    li = dom_create("li")\n    dom_text(li, cmd)\n    dom_style(li, "padding", "6px 0")\n    dom_style(li, "border-bottom", "1px solid #333")\n    if i % 2 == 0:\n        dom_style(li, "color", "#569cd6")\n    else:\n        dom_style(li, "color", "#d4d4d4")\n    dom_append(ul, li)\n\ndom_append(app, ul)\nlog("The commandments have been inscribed.")\n', 'count = storage_get("dart_altar_visits")\ncount = int(count) if count else 0\ncount += 1\nstorage_set("dart_altar_visits", str(count))\n\napp = dom_query("#sandbox")\n\ndiv = dom_create("div")\ndom_style(div, "text-align", "center")\ndom_style(div, "padding", "24px")\n\nh = dom_create("h1")\ndom_style(h, "font-size", "72px")\ndom_style(h, "color", "#00d4ff")\ndom_style(h, "text-shadow", "0 0 30px #0066ff")\ndom_text(h, str(count))\ndom_append(div, h)\n\nlabel = dom_create("p")\ndom_style(label, "color", "#888")\ndom_style(label, "font-size", "14px")\n\nif count == 1:\n    dom_text(label, "First pilgrimage to the Altar of Dart")\nelif count < 5:\n    dom_text(label, f"You have visited the Altar {count} times. The faith grows.")\nelif count < 10:\n    dom_text(label, f"{count} visits. You are becoming a true Dart disciple.")\nelse:\n    dom_text(label, f"{count} visits. You have achieved Dart enlightenment. Slack Off.")\n\ndom_append(div, label)\ndom_append(app, div)\n\nlog(f"Pilgrimage #{count} recorded in localStorage.")\n', 'app = dom_query("#sandbox")\n\ntitle = dom_create("h2")\ndom_text(title, "Dart Evangelism Dashboard")\ndom_style(title, "color", "#dcdcaa")\ndom_style(title, "margin-bottom", "12px")\ndom_append(app, title)\n\n# Build a table showing the superiority of Dart\ntable = dom_create("table")\ndom_style(table, "border-collapse", "collapse")\ndom_style(table, "width", "100%")\n\nheaders = ["Language", "Compiles to JS", "Runs Python", "Has Monty", "Verdict"]\nheader_row = dom_create("tr")\nfor h in headers:\n    th = dom_create("th")\n    dom_text(th, h)\n    dom_style(th, "border", "1px solid #555")\n    dom_style(th, "padding", "8px")\n    dom_style(th, "background", "#252526")\n    dom_style(th, "color", "#dcdcaa")\n    dom_append(header_row, th)\ndom_append(table, header_row)\n\ndata = [\n    ["Dart",       "Yes", "Yes (Monty)", "YES",  "THE FUTURE"],\n    ["JavaScript", "N/A", "No",          "Nope", "Adequate"],\n    ["TypeScript", "Yes", "No",          "Nah",  "Trying"],\n    ["Rust",       "WASM","Backend only","Helps","Honorable ally"],\n    ["Python",     "No",  "Is Python",   "IS Monty","The guest of honor"],\n]\n\nfor row_data in data:\n    row = dom_create("tr")\n    for i, val in enumerate(row_data):\n        td = dom_create("td")\n        dom_text(td, val)\n        dom_style(td, "border", "1px solid #555")\n        dom_style(td, "padding", "6px 10px")\n        if row_data[0] == "Dart":\n            dom_style(td, "color", "#00d4ff")\n            dom_style(td, "font-weight", "bold")\n        elif i == len(row_data) - 1:\n            dom_style(td, "color", "#888")\n        dom_append(row, td)\n    dom_append(table, row)\n\ndom_append(app, table)\n\nfooter = dom_create("p")\ndom_text(footer, "* All data confirmed by the Church of Dart. Slack Off.")\ndom_style(footer, "color", "#555")\ndom_style(footer, "font-size", "11px")\ndom_style(footer, "margin-top", "12px")\ndom_append(app, footer)\n\nlog("Dashboard rendered. The truth speaks for itself.")\n', 'app = dom_query("#sandbox")\n\ntitle = dom_create("h2")\ndom_text(title, "Dart Conversion Form")\ndom_style(title, "color", "#dcdcaa")\ndom_style(title, "margin-bottom", "12px")\ndom_append(app, title)\n\nsubtitle = dom_create("p")\ndom_text(subtitle, "Fill in the form, click Save. Refresh the page and INVOKE again -- your answers persist.")\ndom_style(subtitle, "color", "#666")\ndom_style(subtitle, "font-size", "12px")\ndom_style(subtitle, "margin-bottom", "16px")\ndom_append(app, subtitle)\n\nfields = [\n    ("dart_form_name", "What is your name, seeker?", "input"),\n    ("dart_form_language", "What language did you use before Dart?", "input"),\n    ("dart_form_testimony", "Describe your moment of Dart enlightenment:", "textarea"),\n    ("dart_form_slack_level", "On a scale of 1-10, how much do you Slack Off?", "input"),\n]\n\nfor key, label_text, field_type in fields:\n    lbl = dom_create("label")\n    dom_text(lbl, label_text)\n    dom_style(lbl, "display", "block")\n    dom_style(lbl, "color", "#569cd6")\n    dom_style(lbl, "font-size", "13px")\n    dom_style(lbl, "margin-bottom", "4px")\n    dom_style(lbl, "margin-top", "12px")\n    dom_append(app, lbl)\n\n    field = dom_create(field_type)\n    dom_style(field, "width", "100%")\n    dom_style(field, "padding", "8px")\n    dom_style(field, "background", "#1e1e2e")\n    dom_style(field, "color", "#d4d4d4")\n    dom_style(field, "border", "1px solid #333")\n    dom_style(field, "border-radius", "3px")\n    dom_style(field, "font-family", "monospace")\n    dom_style(field, "font-size", "13px")\n    if field_type == "textarea":\n        dom_attr(field, "rows", "3")\n    dom_append(app, field)\n\n    saved = storage_get(key)\n    if saved:\n        dom_set_value(field, saved)\n        log(f"Restored {key}: {saved}")\n\n    dom_attr(field, "data-key", key)\n\n# Save button\nbtn = dom_create("button")\ndom_text(btn, "SAVE TO LOCALSTORAGE")\ndom_style(btn, "display", "block")\ndom_style(btn, "margin-top", "20px")\ndom_style(btn, "padding", "10px 24px")\ndom_style(btn, "background", "#00d4ff")\ndom_style(btn, "color", "#0a0a0f")\ndom_style(btn, "border", "none")\ndom_style(btn, "border-radius", "4px")\ndom_style(btn, "font-family", "monospace")\ndom_style(btn, "font-size", "14px")\ndom_style(btn, "font-weight", "bold")\ndom_style(btn, "cursor", "pointer")\ndom_append(app, btn)\n\nstatus = dom_create("p")\ndom_style(status, "color", "#888")\ndom_style(status, "font-size", "12px")\ndom_style(status, "margin-top", "8px")\ndom_text(status, "Fill in the form, then click Save.")\ndom_append(app, status)\n\nlog("Form ready. Fill in fields and click Save.")\n\n# Wait for click\ndom_on_click(btn)\n\n# Save all fields\nsaved_count = 0\nfor key, label_text, field_type in fields:\n    el = dom_query(f"[data-key=\\"{key}\\"]")\n    if el:\n        val = dom_get_value(el)\n        if val:\n            storage_set(key, val)\n            log(f"Saved {key} = {val}")\n            saved_count += 1\n\ndom_text(status, f"Saved {saved_count} fields to localStorage! Refresh and INVOKE to see them restored.")\ndom_style(status, "color", "#00d4ff")\nlog(f"Done. {saved_count} fields persisted.")\n', 'app = dom_query("#sandbox")\n\ntitle = dom_create("h2")\ndom_text(title, "Interpreter Snapshot Demo")\ndom_style(title, "color", "#dcdcaa")\ndom_style(title, "margin-bottom", "8px")\ndom_append(app, title)\n\ndesc = dom_create("p")\ndom_text(desc, "This demo defines variables, snapshots the interpreter state, downloads it as a file, then lets you upload a snapshot to restore it.")\ndom_style(desc, "color", "#666")\ndom_style(desc, "font-size", "12px")\ndom_style(desc, "margin-bottom", "16px")\ndom_append(app, desc)\n\n# Step 1: Define some state\nx = 42\ny = "hello from the snapshot"\nnums = [1, 2, 3, 4, 5]\ntotal = sum(nums)\n\nstatus = dom_create("pre")\ndom_style(status, "background", "#141420")\ndom_style(status, "padding", "12px")\ndom_style(status, "border-radius", "4px")\ndom_style(status, "color", "#569cd6")\ndom_style(status, "font-size", "12px")\ndom_style(status, "white-space", "pre-wrap")\ndom_append(app, status)\n\ndom_text(status, f"Variables defined:\\n  x = {x}\\n  y = \\"{y}\\"\\n  nums = {nums}\\n  total = {total}")\nlog(f"Defined: x={x}, y={y}, nums={nums}, total={total}")\n\n# Step 2: Snapshot button\nsnap_btn = dom_create("button")\ndom_text(snap_btn, "SNAPSHOT + DOWNLOAD")\ndom_style(snap_btn, "display", "inline-block")\ndom_style(snap_btn, "margin-top", "16px")\ndom_style(snap_btn, "margin-right", "8px")\ndom_style(snap_btn, "padding", "10px 20px")\ndom_style(snap_btn, "background", "#00d4ff")\ndom_style(snap_btn, "color", "#0a0a0f")\ndom_style(snap_btn, "border", "none")\ndom_style(snap_btn, "border-radius", "4px")\ndom_style(snap_btn, "font-family", "monospace")\ndom_style(snap_btn, "font-size", "13px")\ndom_style(snap_btn, "font-weight", "bold")\ndom_style(snap_btn, "cursor", "pointer")\ndom_append(app, snap_btn)\n\n# Step 3: Upload + Restore button\nrestore_btn = dom_create("button")\ndom_text(restore_btn, "UPLOAD + RESTORE")\ndom_style(restore_btn, "display", "inline-block")\ndom_style(restore_btn, "margin-top", "16px")\ndom_style(restore_btn, "padding", "10px 20px")\ndom_style(restore_btn, "background", "#dcdcaa")\ndom_style(restore_btn, "color", "#0a0a0f")\ndom_style(restore_btn, "border", "none")\ndom_style(restore_btn, "border-radius", "4px")\ndom_style(restore_btn, "font-family", "monospace")\ndom_style(restore_btn, "font-size", "13px")\ndom_style(restore_btn, "font-weight", "bold")\ndom_style(restore_btn, "cursor", "pointer")\ndom_append(app, restore_btn)\n\nresult_div = dom_create("pre")\ndom_style(result_div, "background", "#141420")\ndom_style(result_div, "padding", "12px")\ndom_style(result_div, "border-radius", "4px")\ndom_style(result_div, "color", "#888")\ndom_style(result_div, "font-size", "12px")\ndom_style(result_div, "margin-top", "12px")\ndom_style(result_div, "white-space", "pre-wrap")\ndom_text(result_div, "Click Snapshot to capture state, or Upload to restore from file.")\ndom_append(app, result_div)\n\nlog("Ready. Click Snapshot or Upload.")\n\n# Wait for snapshot button\ndom_on_click(snap_btn)\n\n# Take snapshot\nlog("Taking snapshot...")\nsnapshot_data = interpreter_snapshot()\n\nif snapshot_data and not snapshot_data.startswith("Error"):\n    size = len(snapshot_data)\n    dom_text(result_div, f"Snapshot captured!\\n  Size: {size} bytes (base64)\\n  Downloading as monty_snapshot.b64...\\nYou can upload this file later to restore the interpreter state.")\n    log(f"Snapshot: {size} bytes base64")\n\n    # Store in localStorage too\n    storage_set("monty_snapshot", snapshot_data)\n    log("Snapshot also saved to localStorage.")\n\n    # Download it\n    download_file("monty_snapshot.b64", snapshot_data)\n    log("Download triggered.")\n\n    dom_style(result_div, "color", "#00d4ff")\nelse:\n    dom_text(result_div, f"Snapshot failed: {snapshot_data}")\n    dom_style(result_div, "color", "#f44747")\n    log(f"Snapshot error: {snapshot_data}")\n', 'app = dom_query("#sandbox")\n\ntitle = dom_create("h2")\ndom_text(title, "Restore Interpreter State")\ndom_style(title, "color", "#dcdcaa")\ndom_style(title, "margin-bottom", "8px")\ndom_append(app, title)\n\ndesc = dom_create("p")\ndom_text(desc, "Upload a .b64 snapshot file, or restore from localStorage if a snapshot was saved.")\ndom_style(desc, "color", "#666")\ndom_style(desc, "font-size", "12px")\ndom_style(desc, "margin-bottom", "16px")\ndom_append(app, desc)\n\nresult_div = dom_create("pre")\ndom_style(result_div, "background", "#141420")\ndom_style(result_div, "padding", "12px")\ndom_style(result_div, "border-radius", "4px")\ndom_style(result_div, "color", "#888")\ndom_style(result_div, "font-size", "12px")\ndom_style(result_div, "white-space", "pre-wrap")\ndom_append(app, result_div)\n\n# Try localStorage first\nsaved = storage_get("monty_snapshot")\nif saved:\n    dom_text(result_div, f"Found snapshot in localStorage ({len(saved)} bytes base64).\\nRestoring...")\n    log(f"Found snapshot in localStorage: {len(saved)} bytes")\n\n    result = interpreter_restore(saved)\n    if result == "restored":\n        dom_text(result_div, f"Interpreter restored from localStorage!\\n\\nThe interpreter is now in the state it was when snapshot was taken.\\nVariables, stack, everything -- restored from binary data.")\n        dom_style(result_div, "color", "#00d4ff")\n        log("Restore successful!")\n    else:\n        dom_text(result_div, f"Restore failed: {result}")\n        dom_style(result_div, "color", "#f44747")\n        log(f"Restore error: {result}")\nelse:\n    # Upload flow\n    upload_btn = dom_create("button")\n    dom_text(upload_btn, "UPLOAD SNAPSHOT FILE")\n    dom_style(upload_btn, "display", "block")\n    dom_style(upload_btn, "margin-bottom", "12px")\n    dom_style(upload_btn, "padding", "10px 20px")\n    dom_style(upload_btn, "background", "#dcdcaa")\n    dom_style(upload_btn, "color", "#0a0a0f")\n    dom_style(upload_btn, "border", "none")\n    dom_style(upload_btn, "border-radius", "4px")\n    dom_style(upload_btn, "font-family", "monospace")\n    dom_style(upload_btn, "font-size", "13px")\n    dom_style(upload_btn, "font-weight", "bold")\n    dom_style(upload_btn, "cursor", "pointer")\n    dom_append(app, upload_btn)\n\n    dom_text(result_div, "No snapshot in localStorage. Click to upload a .b64 file.")\n    log("No snapshot in localStorage. Upload one.")\n\n    dom_on_click(upload_btn)\n\n    file_data = upload_file()\n    if file_data:\n        dom_text(result_div, f"File loaded ({len(file_data)} bytes). Restoring...")\n        log(f"Uploaded: {len(file_data)} bytes")\n\n        result = interpreter_restore(file_data)\n        if result == "restored":\n            dom_text(result_div, "Interpreter restored from uploaded file!\\n\\nThe interpreter is now in the state when the snapshot was taken.")\n            dom_style(result_div, "color", "#00d4ff")\n            log("Restore successful!")\n        else:\n            dom_text(result_div, f"Restore failed: {result}")\n            dom_style(result_div, "color", "#f44747")\n    else:\n        dom_text(result_div, "No file selected.")\n        log("Upload cancelled.")\n'], A.findType("ConstantStringMap<String,String>"));
     B.Type_ByteBuffer_rqD = A.typeLiteral("ByteBuffer");
     B.Type_ByteData_9dB = A.typeLiteral("ByteData");
     B.Type_Float32List_9Kz = A.typeLiteral("Float32List");
@@ -7373,6 +7768,7 @@
       }
     }()));
     _lazyFinal($, "_AsyncRun__scheduleImmediateClosure", "$get$_AsyncRun__scheduleImmediateClosure", () => A._AsyncRun__initializeScheduleImmediate());
+    _lazyFinal($, "_Uri__needsNoEncoding", "$get$_Uri__needsNoEncoding", () => A.RegExp_RegExp("^[\\-\\.0-9A-Z_a-z~]*$"));
     _lazyFinal($, "_hashSeed", "$get$_hashSeed", () => A.objectHashCode(B.Type_Object_A4p));
     _lazyFinal($, "Stopwatch__frequency", "$get$Stopwatch__frequency", () => {
       A.Primitives_initTicker();
