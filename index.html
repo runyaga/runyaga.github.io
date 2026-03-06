@@ -161,6 +161,14 @@
       color: #333;
       font-style: italic;
     }
+    .status-bar a {
+      color: #569cd6;
+      text-decoration: none;
+      margin-left: 12px;
+      font-size: 0.75rem;
+    }
+    .status-bar a:hover { text-decoration: underline; }
+    .links { display: flex; align-items: center; gap: 4px; }
 
   </style>
 </head>
@@ -200,7 +208,11 @@
   <!-- ═══ STATUS BAR ═══ -->
   <div class="status-bar">
     <span id="status">Loading the sacred interpreter...</span>
-    <span class="creed">Dart is the way. Slack off.</span>
+    <span class="links">
+      <span class="creed">Dart is the way. Slack off.</span>
+      <a href="https://pub.dev/packages/dart_monty">pub.dev/dart_monty</a>
+      <a href="https://github.com/runyaga/dart_monty">GitHub</a>
+    </span>
   </div>
 
   <!-- ═══ SCRIPTS ═══ -->
