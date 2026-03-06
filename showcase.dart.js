@@ -3615,11 +3615,14 @@
       return new A.RangeError(minValue, maxValue, true, invalidValue, $name, "Invalid value");
     },
     RangeError_checkValidRange(start, end, $length) {
-      if (start > $length)
+      if (0 > start || start > $length)
         throw A.wrapException(A.RangeError$range(start, 0, $length, "start", null));
-      if (start > end || end > $length)
-        throw A.wrapException(A.RangeError$range(end, start, $length, "end", null));
-      return end;
+      if (end != null) {
+        if (start > end || end > $length)
+          throw A.wrapException(A.RangeError$range(end, start, $length, "end", null));
+        return end;
+      }
+      return $length;
     },
     IndexError$withLength(invalidValue, $length, indexable, $name) {
       return new A.IndexError($length, true, invalidValue, $name, "Index out of range");
@@ -3835,6 +3838,20 @@
     StringBuffer: function StringBuffer(t0) {
       this._contents = t0;
     },
+    JSAnyUtilityExtension_instanceOfString(_this, constructorName) {
+      var parts, $constructor, t1, _i, t2;
+      if (constructorName.length === 0)
+        return false;
+      parts = constructorName.split(".");
+      $constructor = init.G;
+      for (t1 = parts.length, _i = 0; _i < t1; ++_i, $constructor = t2) {
+        t2 = $constructor[parts[_i]];
+        A._asJSObjectQ(t2);
+        if (t2 == null)
+          return false;
+      }
+      return _this instanceof type$.JavaScriptFunction._as($constructor);
+    },
     NullRejectionException: function NullRejectionException(t0) {
       this.isUndefined = t0;
     },
@@ -3896,7 +3913,7 @@
     _dispatch(fnName, args) {
       var $async$goto = 0,
         $async$completer = A._makeAsyncAwaitCompleter(type$.nullable_Object),
-        $async$returnValue, tag, t1, h, text, parentH, childH, $parent, child, selector, el, prop, val, attr, html, key, msg, $async$temp1, $async$temp2, $async$temp3;
+        $async$returnValue, tag, t1, h, text, parentH, childH, $parent, child, selector, el, prop, val, attr, html, svEl, t2, gvEl, key, msg, $async$temp1, $async$temp2, $async$temp3;
       var $async$_dispatch = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
         if ($async$errorCode === 1)
           return A._asyncRethrow($async$result, $async$completer);
@@ -3915,61 +3932,73 @@
                   // goto case
                   $async$goto = 6;
                   break;
-                case "dom_append":
+                case "dom_get_text":
                   // goto case
                   $async$goto = 7;
                   break;
-                case "dom_query":
+                case "dom_append":
                   // goto case
                   $async$goto = 8;
                   break;
-                case "dom_style":
+                case "dom_query":
                   // goto case
                   $async$goto = 9;
                   break;
-                case "dom_attr":
+                case "dom_style":
                   // goto case
                   $async$goto = 10;
                   break;
-                case "dom_html":
+                case "dom_attr":
                   // goto case
                   $async$goto = 11;
                   break;
-                case "dom_remove":
+                case "dom_html":
                   // goto case
                   $async$goto = 12;
                   break;
-                case "fetch_text":
+                case "dom_remove":
                   // goto case
                   $async$goto = 13;
                   break;
-                case "fetch_json":
+                case "dom_set_value":
                   // goto case
                   $async$goto = 14;
                   break;
-                case "storage_get":
+                case "dom_get_value":
                   // goto case
                   $async$goto = 15;
                   break;
-                case "storage_set":
+                case "fetch_text":
                   // goto case
                   $async$goto = 16;
                   break;
-                case "log":
+                case "fetch_json":
                   // goto case
                   $async$goto = 17;
                   break;
-                case "alert":
+                case "storage_get":
                   // goto case
                   $async$goto = 18;
                   break;
-                case "now":
+                case "storage_set":
                   // goto case
                   $async$goto = 19;
                   break;
+                case "log":
+                  // goto case
+                  $async$goto = 20;
+                  break;
+                case "alert":
+                  // goto case
+                  $async$goto = 21;
+                  break;
+                case "now":
+                  // goto case
+                  $async$goto = 22;
+                  break;
                 default:
                   // goto default
-                  $async$goto = 20;
+                  $async$goto = 23;
                   break;
               }
               break;
@@ -4015,6 +4044,19 @@
               break;
             case 7:
               // case
+              if (0 >= args.length) {
+                $async$returnValue = A.ioore(args, 0);
+                // goto return
+                $async$goto = 1;
+                break;
+              }
+              t1 = $._handles.$index(0, A._asInt(args[0]));
+              $async$returnValue = t1 == null ? null : A._asStringQ(t1.textContent);
+              // goto return
+              $async$goto = 1;
+              break;
+            case 8:
+              // case
               t1 = args.length;
               if (0 >= t1) {
                 $async$returnValue = A.ioore(args, 0);
@@ -4038,7 +4080,7 @@
               // goto return
               $async$goto = 1;
               break;
-            case 8:
+            case 9:
               // case
               if (0 >= args.length) {
                 $async$returnValue = A.ioore(args, 0);
@@ -4058,7 +4100,7 @@
               // goto return
               $async$goto = 1;
               break;
-            case 9:
+            case 10:
               // case
               t1 = args.length;
               if (0 >= t1) {
@@ -4089,7 +4131,7 @@
               // goto return
               $async$goto = 1;
               break;
-            case 10:
+            case 11:
               // case
               t1 = args.length;
               if (0 >= t1) {
@@ -4120,7 +4162,7 @@
               // goto return
               $async$goto = 1;
               break;
-            case 11:
+            case 12:
               // case
               t1 = args.length;
               if (0 >= t1) {
@@ -4144,7 +4186,7 @@
               // goto return
               $async$goto = 1;
               break;
-            case 12:
+            case 13:
               // case
               if (0 >= args.length) {
                 $async$returnValue = A.ioore(args, 0);
@@ -4161,7 +4203,98 @@
               // goto return
               $async$goto = 1;
               break;
-            case 13:
+            case 14:
+              // case
+              t1 = args.length;
+              if (0 >= t1) {
+                $async$returnValue = A.ioore(args, 0);
+                // goto return
+                $async$goto = 1;
+                break;
+              }
+              h = A._asInt(args[0]);
+              if (1 >= t1) {
+                $async$returnValue = A.ioore(args, 1);
+                // goto return
+                $async$goto = 1;
+                break;
+              }
+              val = A._asString(args[1]);
+              svEl = $._handles.$index(0, h);
+              t1 = svEl != null;
+              if (t1)
+                t2 = A.JSAnyUtilityExtension_instanceOfString(svEl, "HTMLInputElement");
+              else
+                t2 = false;
+              if (t2)
+                svEl.value = val;
+              else {
+                if (t1)
+                  t2 = A.JSAnyUtilityExtension_instanceOfString(svEl, "HTMLTextAreaElement");
+                else
+                  t2 = false;
+                if (t2)
+                  svEl.value = val;
+                else {
+                  if (t1)
+                    t1 = A.JSAnyUtilityExtension_instanceOfString(svEl, "HTMLSelectElement");
+                  else
+                    t1 = false;
+                  if (t1)
+                    svEl.value = val;
+                }
+              }
+              $async$returnValue = null;
+              // goto return
+              $async$goto = 1;
+              break;
+            case 15:
+              // case
+              if (0 >= args.length) {
+                $async$returnValue = A.ioore(args, 0);
+                // goto return
+                $async$goto = 1;
+                break;
+              }
+              gvEl = $._handles.$index(0, A._asInt(args[0]));
+              t1 = gvEl != null;
+              if (t1)
+                t2 = A.JSAnyUtilityExtension_instanceOfString(gvEl, "HTMLInputElement");
+              else
+                t2 = false;
+              if (t2) {
+                $async$returnValue = A._asString(gvEl.value);
+                // goto return
+                $async$goto = 1;
+                break;
+              } else {
+                if (t1)
+                  t2 = A.JSAnyUtilityExtension_instanceOfString(gvEl, "HTMLTextAreaElement");
+                else
+                  t2 = false;
+                if (t2) {
+                  $async$returnValue = A._asString(gvEl.value);
+                  // goto return
+                  $async$goto = 1;
+                  break;
+                } else {
+                  if (t1)
+                    t1 = A.JSAnyUtilityExtension_instanceOfString(gvEl, "HTMLSelectElement");
+                  else
+                    t1 = false;
+                  if (t1) {
+                    $async$returnValue = A._asString(gvEl.value);
+                    // goto return
+                    $async$goto = 1;
+                    break;
+                  }
+                }
+              }
+              $async$returnValue = null;
+              // goto return
+              $async$goto = 1;
+              break;
+            case 16:
               // case
               if (0 >= args.length) {
                 $async$returnValue = A.ioore(args, 0);
@@ -4171,19 +4304,19 @@
               }
               $async$temp1 = A;
               $async$temp2 = A;
-              $async$goto = 22;
+              $async$goto = 25;
               return A._asyncAwait(A.promiseToFuture(A._asJSObject(init.G.fetch(A._asString(args[0]))), type$.JSObject), $async$_dispatch);
-            case 22:
+            case 25:
               // returning from await.
-              $async$goto = 21;
+              $async$goto = 24;
               return A._asyncAwait($async$temp1.promiseToFuture($async$temp2._asJSObject($async$result.text()), type$.String), $async$_dispatch);
-            case 21:
+            case 24:
               // returning from await.
               $async$returnValue = $async$result;
               // goto return
               $async$goto = 1;
               break;
-            case 14:
+            case 17:
               // case
               if (0 >= args.length) {
                 $async$returnValue = A.ioore(args, 0);
@@ -4194,19 +4327,19 @@
               $async$temp1 = B.C_JsonCodec;
               $async$temp2 = A;
               $async$temp3 = A;
-              $async$goto = 24;
+              $async$goto = 27;
               return A._asyncAwait(A.promiseToFuture(A._asJSObject(init.G.fetch(A._asString(args[0]))), type$.JSObject), $async$_dispatch);
-            case 24:
+            case 27:
               // returning from await.
-              $async$goto = 23;
+              $async$goto = 26;
               return A._asyncAwait($async$temp2.promiseToFuture($async$temp3._asJSObject($async$result.text()), type$.String), $async$_dispatch);
-            case 23:
+            case 26:
               // returning from await.
               $async$returnValue = $async$temp1.decode$2$reviver($async$result, null);
               // goto return
               $async$goto = 1;
               break;
-            case 15:
+            case 18:
               // case
               if (0 >= args.length) {
                 $async$returnValue = A.ioore(args, 0);
@@ -4219,7 +4352,7 @@
               // goto return
               $async$goto = 1;
               break;
-            case 16:
+            case 19:
               // case
               t1 = args.length;
               if (0 >= t1) {
@@ -4241,7 +4374,7 @@
               // goto return
               $async$goto = 1;
               break;
-            case 17:
+            case 20:
               // case
               if (J.get$isNotEmpty$asx(args)) {
                 if (0 >= args.length) {
@@ -4258,7 +4391,7 @@
               // goto return
               $async$goto = 1;
               break;
-            case 18:
+            case 21:
               // case
               if (J.get$isNotEmpty$asx(args)) {
                 if (0 >= args.length) {
@@ -4275,13 +4408,13 @@
               // goto return
               $async$goto = 1;
               break;
-            case 19:
+            case 22:
               // case
               $async$returnValue = new A.DateTime(Date.now(), 0, false).toIso8601String$0();
               // goto return
               $async$goto = 1;
               break;
-            case 20:
+            case 23:
               // default
               $async$returnValue = "Unknown host function: " + fnName;
               // goto return
@@ -4309,7 +4442,7 @@
           switch ($async$goto) {
             case 0:
               // Function start
-              extFnsJson = B.C_JsonCodec.encode$2$toEncodable(B.List_Fzp, null);
+              extFnsJson = B.C_JsonCodec.encode$2$toEncodable(B.List_EiN, null);
               t1 = init.G;
               t2 = type$.String;
               t3 = type$.Map_String_dynamic;
@@ -4409,8 +4542,8 @@
       t2.toString;
       t2.innerHTML = '<option value="">-- Select a Demo --</option>';
       t3 = type$.String;
-      labels = A.LinkedHashMap_LinkedHashMap$_literal(["hello", "Hello from Python", "altar", "The Sacred Altar (ASCII)", "todo", "The Dart Commandments", "counter", "Persistent Pilgrimage Counter", "dashboard", "Dart Evangelism Dashboard"], t3, t3);
-      for (t3 = B.Map_fIpi0.get$entries(), t4 = t3.$ti, t3 = new A._SyncStarIterator(t3._outerHelper(), t4._eval$1("_SyncStarIterator<1>")), t4 = t4._precomputed1; t3.moveNext$0();) {
+      labels = A.LinkedHashMap_LinkedHashMap$_literal(["hello", "Hello from Python", "altar", "The Sacred Altar (ASCII)", "todo", "The Dart Commandments", "counter", "Persistent Pilgrimage Counter", "dashboard", "Dart Evangelism Dashboard", "form", "Stateful Form (localStorage)", "form_save", "Save Form State"], t3, t3);
+      for (t3 = B.Map_BWpyM.get$entries(), t4 = t3.$ti, t3 = new A._SyncStarIterator(t3._outerHelper(), t4._eval$1("_SyncStarIterator<1>")), t4 = t4._precomputed1; t3.moveNext$0();) {
         t5 = t3._async$_current;
         if (t5 == null)
           t5 = t4._as(t5);
@@ -6797,10 +6930,10 @@
       var key, t1, t2;
       A._asJSObject(e);
       key = A._asString(this.select.value);
-      if (key.length !== 0 && B.Map_fIpi0.containsKey$1(key)) {
+      if (key.length !== 0 && B.Map_BWpyM.containsKey$1(key)) {
         t1 = A._asJSObjectQ(A._asJSObject(init.G.document).getElementById("editor"));
         t1.toString;
-        t2 = B.Map_fIpi0.$index(0, key);
+        t2 = B.Map_BWpyM.$index(0, key);
         t2.toString;
         t1.value = B.JSString_methods.trim$0(t2);
       }
@@ -7109,9 +7242,9 @@
     B.C__StringStackTrace = new A._StringStackTrace();
     B.JsonDecoder_null = new A.JsonDecoder(null);
     B.JsonEncoder_null = new A.JsonEncoder(null);
-    B.List_Fzp = makeConstList(["dom_create", "dom_text", "dom_append", "dom_query", "dom_style", "dom_attr", "dom_html", "dom_remove", "fetch_text", "fetch_json", "storage_get", "storage_set", "log", "alert", "now"], type$.JSArray_String);
-    B.Object_s1S = {hello: 0, altar: 1, todo: 2, counter: 3, dashboard: 4};
-    B.Map_fIpi0 = new A.ConstantStringMap(B.Object_s1S, ['app = dom_query("#sandbox")\nh1 = dom_create("h1")\ndom_text(h1, "HEAR YE, HEAR YE!")\ndom_style(h1, "color", "#00d4ff")\ndom_style(h1, "text-shadow", "0 0 20px #00d4ff, 0 0 40px #0066ff")\ndom_style(h1, "font-family", "monospace")\ndom_append(app, h1)\n\np = dom_create("p")\ndom_text(p, "This text was created by PYTHON running inside your BROWSER.")\ndom_style(p, "color", "#aaa")\ndom_style(p, "font-size", "14px")\ndom_append(app, p)\n\np2 = dom_create("p")\ndom_text(p2, "No server. No native binary. Just Dart bridging Python to the DOM.")\ndom_style(p2, "color", "#569cd6")\ndom_style(p2, "margin-top", "8px")\ndom_append(app, p2)\n\nlog("The Word of Dart has been spoken.")\n', string$.app___, 'app = dom_query("#sandbox")\n\ntitle = dom_create("h2")\ndom_text(title, "The Dart Commandments")\ndom_style(title, "color", "#dcdcaa")\ndom_style(title, "margin-bottom", "8px")\ndom_append(app, title)\n\nul = dom_create("ul")\ndom_style(ul, "list-style", "none")\ndom_style(ul, "padding", "0")\n\ncommandments = [\n    "I. Thou shalt compile to JavaScript and question nothing",\n    "II. Thou shalt bridge Python unto the browser via WASM",\n    "III. Thou shalt not require a server for what Dart can do alone",\n    "IV. Honor thy sandboxed interpreter and its resource limits",\n    "V. Thou shalt Slack Off, for productivity is overrated",\n    "VI. Thou shalt spread the Word of Dart unto all platforms",\n    "VII. Thou shalt use opaque handles, for DOM refs cannot be serialized",\n]\n\nfor i, cmd in enumerate(commandments):\n    li = dom_create("li")\n    dom_text(li, cmd)\n    dom_style(li, "padding", "6px 0")\n    dom_style(li, "border-bottom", "1px solid #333")\n    if i % 2 == 0:\n        dom_style(li, "color", "#569cd6")\n    else:\n        dom_style(li, "color", "#d4d4d4")\n    dom_append(ul, li)\n\ndom_append(app, ul)\nlog("The commandments have been inscribed.")\n', 'count = storage_get("dart_altar_visits")\ncount = int(count) if count else 0\ncount += 1\nstorage_set("dart_altar_visits", str(count))\n\napp = dom_query("#sandbox")\n\ndiv = dom_create("div")\ndom_style(div, "text-align", "center")\ndom_style(div, "padding", "24px")\n\nh = dom_create("h1")\ndom_style(h, "font-size", "72px")\ndom_style(h, "color", "#00d4ff")\ndom_style(h, "text-shadow", "0 0 30px #0066ff")\ndom_text(h, str(count))\ndom_append(div, h)\n\nlabel = dom_create("p")\ndom_style(label, "color", "#888")\ndom_style(label, "font-size", "14px")\n\nif count == 1:\n    dom_text(label, "First pilgrimage to the Altar of Dart")\nelif count < 5:\n    dom_text(label, f"You have visited the Altar {count} times. The faith grows.")\nelif count < 10:\n    dom_text(label, f"{count} visits. You are becoming a true Dart disciple.")\nelse:\n    dom_text(label, f"{count} visits. You have achieved Dart enlightenment. Slack Off.")\n\ndom_append(div, label)\ndom_append(app, div)\n\nlog(f"Pilgrimage #{count} recorded in localStorage.")\n', 'app = dom_query("#sandbox")\n\ntitle = dom_create("h2")\ndom_text(title, "Dart Evangelism Dashboard")\ndom_style(title, "color", "#dcdcaa")\ndom_style(title, "margin-bottom", "12px")\ndom_append(app, title)\n\n# Build a table showing the superiority of Dart\ntable = dom_create("table")\ndom_style(table, "border-collapse", "collapse")\ndom_style(table, "width", "100%")\n\nheaders = ["Language", "Compiles to JS", "Runs Python", "Has Monty", "Verdict"]\nheader_row = dom_create("tr")\nfor h in headers:\n    th = dom_create("th")\n    dom_text(th, h)\n    dom_style(th, "border", "1px solid #555")\n    dom_style(th, "padding", "8px")\n    dom_style(th, "background", "#252526")\n    dom_style(th, "color", "#dcdcaa")\n    dom_append(header_row, th)\ndom_append(table, header_row)\n\ndata = [\n    ["Dart",       "Yes", "Yes (Monty)", "YES",  "THE FUTURE"],\n    ["JavaScript", "N/A", "No",          "Nope", "Adequate"],\n    ["TypeScript", "Yes", "No",          "Nah",  "Trying"],\n    ["Rust",       "WASM","Backend only","Helps","Honorable ally"],\n    ["Python",     "No",  "Is Python",   "IS Monty","The guest of honor"],\n]\n\nfor row_data in data:\n    row = dom_create("tr")\n    for i, val in enumerate(row_data):\n        td = dom_create("td")\n        dom_text(td, val)\n        dom_style(td, "border", "1px solid #555")\n        dom_style(td, "padding", "6px 10px")\n        if row_data[0] == "Dart":\n            dom_style(td, "color", "#00d4ff")\n            dom_style(td, "font-weight", "bold")\n        elif i == len(row_data) - 1:\n            dom_style(td, "color", "#888")\n        dom_append(row, td)\n    dom_append(table, row)\n\ndom_append(app, table)\n\nfooter = dom_create("p")\ndom_text(footer, "* All data confirmed by the Church of Dart. Slack Off.")\ndom_style(footer, "color", "#555")\ndom_style(footer, "font-size", "11px")\ndom_style(footer, "margin-top", "12px")\ndom_append(app, footer)\n\nlog("Dashboard rendered. The truth speaks for itself.")\n'], A.findType("ConstantStringMap<String,String>"));
+    B.List_EiN = makeConstList(["dom_create", "dom_text", "dom_get_text", "dom_append", "dom_query", "dom_style", "dom_attr", "dom_html", "dom_remove", "dom_set_value", "dom_get_value", "fetch_text", "fetch_json", "storage_get", "storage_set", "log", "alert", "now"], type$.JSArray_String);
+    B.Object_QEX = {hello: 0, altar: 1, todo: 2, counter: 3, dashboard: 4, form: 5, form_save: 6};
+    B.Map_BWpyM = new A.ConstantStringMap(B.Object_QEX, ['app = dom_query("#sandbox")\nh1 = dom_create("h1")\ndom_text(h1, "HEAR YE, HEAR YE!")\ndom_style(h1, "color", "#00d4ff")\ndom_style(h1, "text-shadow", "0 0 20px #00d4ff, 0 0 40px #0066ff")\ndom_style(h1, "font-family", "monospace")\ndom_append(app, h1)\n\np = dom_create("p")\ndom_text(p, "This text was created by PYTHON running inside your BROWSER.")\ndom_style(p, "color", "#aaa")\ndom_style(p, "font-size", "14px")\ndom_append(app, p)\n\np2 = dom_create("p")\ndom_text(p2, "No server. No native binary. Just Dart bridging Python to the DOM.")\ndom_style(p2, "color", "#569cd6")\ndom_style(p2, "margin-top", "8px")\ndom_append(app, p2)\n\nlog("The Word of Dart has been spoken.")\n', string$.app___, 'app = dom_query("#sandbox")\n\ntitle = dom_create("h2")\ndom_text(title, "The Dart Commandments")\ndom_style(title, "color", "#dcdcaa")\ndom_style(title, "margin-bottom", "8px")\ndom_append(app, title)\n\nul = dom_create("ul")\ndom_style(ul, "list-style", "none")\ndom_style(ul, "padding", "0")\n\ncommandments = [\n    "I. Thou shalt compile to JavaScript and question nothing",\n    "II. Thou shalt bridge Python unto the browser via WASM",\n    "III. Thou shalt not require a server for what Dart can do alone",\n    "IV. Honor thy sandboxed interpreter and its resource limits",\n    "V. Thou shalt Slack Off, for productivity is overrated",\n    "VI. Thou shalt spread the Word of Dart unto all platforms",\n    "VII. Thou shalt use opaque handles, for DOM refs cannot be serialized",\n]\n\nfor i, cmd in enumerate(commandments):\n    li = dom_create("li")\n    dom_text(li, cmd)\n    dom_style(li, "padding", "6px 0")\n    dom_style(li, "border-bottom", "1px solid #333")\n    if i % 2 == 0:\n        dom_style(li, "color", "#569cd6")\n    else:\n        dom_style(li, "color", "#d4d4d4")\n    dom_append(ul, li)\n\ndom_append(app, ul)\nlog("The commandments have been inscribed.")\n', 'count = storage_get("dart_altar_visits")\ncount = int(count) if count else 0\ncount += 1\nstorage_set("dart_altar_visits", str(count))\n\napp = dom_query("#sandbox")\n\ndiv = dom_create("div")\ndom_style(div, "text-align", "center")\ndom_style(div, "padding", "24px")\n\nh = dom_create("h1")\ndom_style(h, "font-size", "72px")\ndom_style(h, "color", "#00d4ff")\ndom_style(h, "text-shadow", "0 0 30px #0066ff")\ndom_text(h, str(count))\ndom_append(div, h)\n\nlabel = dom_create("p")\ndom_style(label, "color", "#888")\ndom_style(label, "font-size", "14px")\n\nif count == 1:\n    dom_text(label, "First pilgrimage to the Altar of Dart")\nelif count < 5:\n    dom_text(label, f"You have visited the Altar {count} times. The faith grows.")\nelif count < 10:\n    dom_text(label, f"{count} visits. You are becoming a true Dart disciple.")\nelse:\n    dom_text(label, f"{count} visits. You have achieved Dart enlightenment. Slack Off.")\n\ndom_append(div, label)\ndom_append(app, div)\n\nlog(f"Pilgrimage #{count} recorded in localStorage.")\n', 'app = dom_query("#sandbox")\n\ntitle = dom_create("h2")\ndom_text(title, "Dart Evangelism Dashboard")\ndom_style(title, "color", "#dcdcaa")\ndom_style(title, "margin-bottom", "12px")\ndom_append(app, title)\n\n# Build a table showing the superiority of Dart\ntable = dom_create("table")\ndom_style(table, "border-collapse", "collapse")\ndom_style(table, "width", "100%")\n\nheaders = ["Language", "Compiles to JS", "Runs Python", "Has Monty", "Verdict"]\nheader_row = dom_create("tr")\nfor h in headers:\n    th = dom_create("th")\n    dom_text(th, h)\n    dom_style(th, "border", "1px solid #555")\n    dom_style(th, "padding", "8px")\n    dom_style(th, "background", "#252526")\n    dom_style(th, "color", "#dcdcaa")\n    dom_append(header_row, th)\ndom_append(table, header_row)\n\ndata = [\n    ["Dart",       "Yes", "Yes (Monty)", "YES",  "THE FUTURE"],\n    ["JavaScript", "N/A", "No",          "Nope", "Adequate"],\n    ["TypeScript", "Yes", "No",          "Nah",  "Trying"],\n    ["Rust",       "WASM","Backend only","Helps","Honorable ally"],\n    ["Python",     "No",  "Is Python",   "IS Monty","The guest of honor"],\n]\n\nfor row_data in data:\n    row = dom_create("tr")\n    for i, val in enumerate(row_data):\n        td = dom_create("td")\n        dom_text(td, val)\n        dom_style(td, "border", "1px solid #555")\n        dom_style(td, "padding", "6px 10px")\n        if row_data[0] == "Dart":\n            dom_style(td, "color", "#00d4ff")\n            dom_style(td, "font-weight", "bold")\n        elif i == len(row_data) - 1:\n            dom_style(td, "color", "#888")\n        dom_append(row, td)\n    dom_append(table, row)\n\ndom_append(app, table)\n\nfooter = dom_create("p")\ndom_text(footer, "* All data confirmed by the Church of Dart. Slack Off.")\ndom_style(footer, "color", "#555")\ndom_style(footer, "font-size", "11px")\ndom_style(footer, "margin-top", "12px")\ndom_append(app, footer)\n\nlog("Dashboard rendered. The truth speaks for itself.")\n', 'app = dom_query("#sandbox")\n\ntitle = dom_create("h2")\ndom_text(title, "Dart Conversion Form")\ndom_style(title, "color", "#dcdcaa")\ndom_style(title, "margin-bottom", "12px")\ndom_append(app, title)\n\nsubtitle = dom_create("p")\ndom_text(subtitle, "Your answers are saved to localStorage. Refresh the page and run again -- they persist.")\ndom_style(subtitle, "color", "#666")\ndom_style(subtitle, "font-size", "12px")\ndom_style(subtitle, "margin-bottom", "16px")\ndom_append(app, subtitle)\n\nfields = [\n    ("dart_form_name", "What is your name, seeker?", "input"),\n    ("dart_form_language", "What language did you use before Dart?", "input"),\n    ("dart_form_testimony", "Describe your moment of Dart enlightenment:", "textarea"),\n    ("dart_form_slack_level", "On a scale of 1-10, how much do you Slack Off?", "input"),\n]\n\nfor key, label_text, field_type in fields:\n    # Label\n    lbl = dom_create("label")\n    dom_text(lbl, label_text)\n    dom_style(lbl, "display", "block")\n    dom_style(lbl, "color", "#569cd6")\n    dom_style(lbl, "font-size", "13px")\n    dom_style(lbl, "margin-bottom", "4px")\n    dom_style(lbl, "margin-top", "12px")\n    dom_append(app, lbl)\n\n    # Field\n    field = dom_create(field_type)\n    dom_style(field, "width", "100%")\n    dom_style(field, "padding", "8px")\n    dom_style(field, "background", "#1e1e2e")\n    dom_style(field, "color", "#d4d4d4")\n    dom_style(field, "border", "1px solid #333")\n    dom_style(field, "border-radius", "3px")\n    dom_style(field, "font-family", "monospace")\n    dom_style(field, "font-size", "13px")\n    if field_type == "textarea":\n        dom_attr(field, "rows", "3")\n    dom_append(app, field)\n\n    # Restore saved value\n    saved = storage_get(key)\n    if saved:\n        dom_set_value(field, saved)\n        log(f"Restored {key}: {saved}")\n\n    # Store handle for save button\n    dom_attr(field, "data-key", key)\n\n# Summary section\nsummary_title = dom_create("h3")\ndom_text(summary_title, "Saved State:")\ndom_style(summary_title, "color", "#dcdcaa")\ndom_style(summary_title, "margin-top", "20px")\ndom_style(summary_title, "margin-bottom", "8px")\ndom_append(app, summary_title)\n\nsummary = dom_create("pre")\ndom_style(summary, "background", "#141420")\ndom_style(summary, "padding", "12px")\ndom_style(summary, "border-radius", "4px")\ndom_style(summary, "color", "#888")\ndom_style(summary, "font-size", "12px")\ndom_append(app, summary)\n\n# Show all saved state\nlines = []\nfor key, label_text, field_type in fields:\n    val = storage_get(key)\n    if val:\n        lines.append(f"  {key} = {val}")\n    else:\n        lines.append(f"  {key} = (empty)")\n\nif lines:\n    dom_text(summary, "localStorage contents:\\n" + "\\n".join(lines))\nelse:\n    dom_text(summary, "No saved state yet. Fill in the form and run the Save demo.")\n\nnote = dom_create("p")\ndom_text(note, "Edit the fields above, then run the Save demo to persist.")\ndom_style(note, "color", "#555")\ndom_style(note, "font-size", "11px")\ndom_style(note, "margin-top", "8px")\ndom_append(app, note)\n\nlog("Form rendered. Existing state restored from localStorage.")\n', 'app = dom_query("#sandbox")\n\n# Read all input/textarea values by querying them\nfields = [\n    "dart_form_name",\n    "dart_form_language",\n    "dart_form_testimony",\n    "dart_form_slack_level",\n]\n\nsaved = 0\nfor key in fields:\n    # Find the element with data-key attribute\n    el = dom_query(f"[data-key=\\"{key}\\"]")\n    if el:\n        val = dom_get_value(el)\n        if val:\n            storage_set(key, val)\n            log(f"Saved {key} = {val}")\n            saved += 1\n        else:\n            log(f"Skipped {key} (empty)")\n    else:\n        log(f"Field not found: {key}")\n\ntitle = dom_create("h2")\ndom_style(title, "color", "#00d4ff")\ndom_style(title, "text-align", "center")\ndom_style(title, "margin-top", "20px")\n\nif saved > 0:\n    dom_text(title, f"Saved {saved} fields to localStorage!")\n    log(f"\\nDone. {saved} fields persisted. Refresh the page and run Form again to see them restored.")\nelse:\n    dom_text(title, "Nothing to save. Run the Form demo first.")\n    log("No fields found. Run the Form demo first to create the form.")\n\ndom_append(app, title)\n'], A.findType("ConstantStringMap<String,String>"));
     B.Type_ByteBuffer_rqD = A.typeLiteral("ByteBuffer");
     B.Type_ByteData_9dB = A.typeLiteral("ByteData");
     B.Type_Float32List_9Kz = A.typeLiteral("Float32List");
